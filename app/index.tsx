@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function FirstScreen() {
   const router = useRouter();
+
   return (
     <SafeAreaView edges={["top", "bottom"]} className="flex-1 bg-[#5D60F1]">
       <View className="flex-1 px-8 justify-between py-10">
@@ -38,6 +39,7 @@ export default function FirstScreen() {
           <TouchableOpacity
             activeOpacity={0.8}
             className="bg-white py-4 rounded-2xl items-center shadow-md active:bg-gray-100"
+            onPress={() => router.push("/signup")}
           >
             <Text className="text-[#5D60F1] text-lg font-bold">
               새로운 계정 만들기
