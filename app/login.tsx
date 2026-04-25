@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenContainer from "../components/screen-container";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <ScreenContainer>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -36,7 +36,7 @@ export default function LoginScreen() {
               placeholder="이메일"
               value={email}
               onChangeText={setEmail}
-              className="w-full h-14 bg-gray-100 rounded-xl px-4 text-lg"
+              className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg"
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -46,7 +46,7 @@ export default function LoginScreen() {
               placeholder="비밀번호"
               value={password}
               onChangeText={setPassword}
-              className="w-full h-14 bg-gray-100 rounded-xl px-4 text-lg mt-4"
+              className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg mt-4"
               secureTextEntry
             />
           </View>
@@ -67,6 +67,6 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }

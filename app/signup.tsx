@@ -2,21 +2,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenContainer from "../components/screen-container";
 
 export default function SignUpScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <ScreenContainer>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
@@ -35,7 +35,7 @@ export default function SignUpScreen() {
               placeholder="이메일 주소"
               value={email}
               onChangeText={setEmail}
-              className="w-full h-14 bg-gray-100 rounded-xl px-4 text-lg"
+              className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg"
               keyboardType="email-address"
               autoCapitalize="none"
             />
@@ -44,12 +44,12 @@ export default function SignUpScreen() {
           {/* 인증 코드 받기 버튼 */}
           <TouchableOpacity
             className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
-            onPress={() => console.log("인증 코드 요청:", email)}
+            onPress={() => router.push("/verification")}
           >
             <Text className="text-white text-lg font-bold">인증 코드 받기</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
