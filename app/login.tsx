@@ -54,7 +54,7 @@ export default function LoginScreen() {
           {/* 로그인 버튼 */}
           <TouchableOpacity
             className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
-            onPress={() => console.log("로그인 시도:", email)}
+            onPress={() => router.push("/home")}
           >
             <Text className="text-white text-lg font-bold">
               기존 계정으로 로그인

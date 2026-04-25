@@ -11,6 +11,7 @@ export default function VerificationScreen() {
 
   const handleChange = (text: string, index: number) => {
     if (text.length > 1) return; // 한 글자만 입력 허용
+
     const newCode = [...code];
     newCode[index] = text;
     setCode(newCode);
@@ -18,6 +19,11 @@ export default function VerificationScreen() {
     // 다음 입력으로 포커스 이동
     if (text && index < 5) {
       inputRef.current[index + 1]?.focus();
+    }
+
+    const isComplete = newCode.every((digit) => digit !== "");
+    if (isComplete) {
+      router.push("/set-password");
     }
   };
 
