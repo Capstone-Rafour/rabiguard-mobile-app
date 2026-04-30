@@ -4,11 +4,15 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+
+SplashScreen.preventAutoHideAsync;
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -16,6 +20,19 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    async function prepare() {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        await SplashScreen.hideAsync();
+      }
+    }
+    prepare();
+  }, []);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
