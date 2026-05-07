@@ -1,22 +1,26 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import ScreenContainer from "../components/screen-container";
 
 export default function SetPasswordScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const email = params.email as string;
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     const passwordRegex = /^[a-zA-Z0-9]{8,20}$/;
     if (!passwordRegex.test(password)) {
       setError("영문, 숫자를 포함하여 8 ~ 20자");
@@ -24,7 +28,30 @@ export default function SetPasswordScreen() {
     }
 
     setError("");
-    router.push("/home");
+
+    // AsyncStorage에 이메일과 비밀번호 저장
+    try {
+      const userData = {
+        email,
+        password,
+        assigned_rpis: [
+          { id: "rpi_01", name: "거실 메인 카메라" },
+          { id: "rpi_02", name: "현관 입구 카메라" },
+          { id: "rpi_03", name: "안방 서브 카메라" },
+        ],
+      };
+
+      await AsyncStorage.setItem("userData", JSON.stringify(userData));
+      console.log("계정 정보 저장 완료");
+
+      router.replace({
+        pathname: "/home",
+        params: { isAutoLoggedIn: "true" },
+      });
+    } catch (e) {
+      console.error("계정 정보 저장 실패", e);
+      alert("계정 정보 저장에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   return (

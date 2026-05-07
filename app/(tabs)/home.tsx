@@ -2,12 +2,31 @@ import CameraListModal from "@/components/camera-list-modal";
 import ConnectedHomeScreen from "@/components/connected-home";
 import ScreenContainer from "@/components/screen-container";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
   const [isConnected, setIsConnected] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [myCameras, setMyCameras] = useState([]);
+
+  useEffect(() => {
+    const loadCameras = async () => {
+      try {
+        const savedData = await AsyncStorage.getItem("userData");
+
+        if (savedData !== null) {
+          const user = JSON.parse(savedData);
+          setMyCameras(user.assigned_rpis || []);
+        }
+      } catch (e) {
+        console.error("카메라 정보를 불러오는데 실패했습니다.", e);
+      }
+    };
+
+    loadCameras();
+  }, []);
 
   return (
     <>
@@ -46,10 +65,11 @@ export default function HomeScreen() {
       <CameraListModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
+        cameras={myCameras}
         onSelectCamera={(name) => {
           setIsConnected(true);
           setIsModalVisible(false);
-          console.log(`선택된 카메라: ${name}`);
+          console.log("선택된 카메라:", name);
         }}
       />
     </>

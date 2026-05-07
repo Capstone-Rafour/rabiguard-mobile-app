@@ -1,11 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import ScreenContainer from "../components/screen-container";
 
 export default function VerificationScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const email = params.email as string;
+
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const inputRef = useRef<(TextInput | null)[]>(Array(6).fill(null));
 
@@ -23,7 +26,16 @@ export default function VerificationScreen() {
 
     const isComplete = newCode.every((digit) => digit !== "");
     if (isComplete) {
-      router.push("/set-password");
+      const fullCode = newCode.join("");
+
+      if (fullCode === "000000") {
+        router.push({
+          pathname: "/set-password",
+          params: { email },
+        });
+      } else {
+        alert("인증번호가 올바르지 않습니다.");
+      }
     }
   };
 

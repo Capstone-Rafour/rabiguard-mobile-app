@@ -13,6 +13,7 @@ const MOCK_CAMERAS = [
 interface CameraListModalProps {
   visible: boolean;
   onClose: () => void;
+  cameras: any[];
   onSelectCamera: (name: string) => void;
 }
 
@@ -20,6 +21,7 @@ export default function CameraListModal({
   visible,
   onClose,
   onSelectCamera,
+  cameras,
 }: CameraListModalProps) {
   return (
     <Modal animationType="slide" transparent={true} visible={visible}>

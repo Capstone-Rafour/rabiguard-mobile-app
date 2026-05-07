@@ -15,6 +15,18 @@ export default function SignUpScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
 
+  const handleEmailNext = () => {
+    if (!email) {
+      alert("이메일 주소를 입력해주세요.");
+      return;
+    }
+
+    router.push({
+      pathname: "/verification",
+      params: { email },
+    });
+  };
+
   return (
     <ScreenContainer>
       <KeyboardAvoidingView
@@ -44,7 +56,7 @@ export default function SignUpScreen() {
           {/* 인증 코드 받기 버튼 */}
           <TouchableOpacity
             className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
-            onPress={() => router.push("/verification")}
+            onPress={handleEmailNext}
           >
             <Text className="text-white text-lg font-bold">인증 코드 받기</Text>
           </TouchableOpacity>

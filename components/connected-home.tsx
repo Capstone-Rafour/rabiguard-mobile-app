@@ -19,7 +19,7 @@ export default function ConnectedHomeScreen() {
         </View>
         {/* 24시간 이벤트 요약 카드 */}
         <View className="bg-white rounded-3xl p-6 shadow-sm mb-4">
-          <Text className="text-3xl font-bold leading-7">
+          <Text className="text-3xl font-bold leading-tight">
             지난 24시간 동안의 {"\n"}이벤트 횟수
           </Text>
           <Text className="text-8xl font-black text-red-500 opacity-80 mt-2">
