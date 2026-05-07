@@ -3,10 +3,12 @@ import ConnectedHomeScreen from "@/components/connected-home";
 import ScreenContainer from "@/components/screen-container";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [isConnected, setIsConnected] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [myCameras, setMyCameras] = useState([]);
@@ -40,7 +42,7 @@ export default function HomeScreen() {
               <Text className="text-3xl font-bold">홈</Text>
               <TouchableOpacity
                 className="w-10 h-10 bg-[#5D60F1] rounded-full justify-center items-center"
-                onPress={() => console.log("마이페이지 이동")}
+                onPress={() => router.push("/my-page")}
               >
                 <Ionicons name="person" size={20} color="white" />
               </TouchableOpacity>
