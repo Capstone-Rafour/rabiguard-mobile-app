@@ -1,9 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import ScreenContainer from "./screen-container";
 
 export default function ConnectedHomeScreen() {
+  const router = useRouter();
+
   return (
     <ScreenContainer>
       <View className="flex-1 px-6">
@@ -12,7 +15,7 @@ export default function ConnectedHomeScreen() {
           <Text className="text-3xl font-bold">홈</Text>
           <TouchableOpacity
             className="w-10 h-10 bg-[#5D60F1] rounded-full justify-center items-center"
-            onPress={() => console.log("마이페이지 이동")}
+            onPress={() => router.push("/my-page")}
           >
             <Ionicons name="person" size={20} color="white" />
           </TouchableOpacity>
@@ -31,7 +34,10 @@ export default function ConnectedHomeScreen() {
         <View className="bg-white rounded-3xl p-6 shadow-sm">
           <View className="flex-row justify-between items-center mb-2">
             <Text className="text-lg font-bold">구역 설정</Text>
-            <TouchableOpacity className="flex-row items-center">
+            <TouchableOpacity
+              className="flex-row items-center"
+              onPress={() => router.push("/area-setting")}
+            >
               <Text className="text-gray-400 mr-1">Detail</Text>
               <Ionicons name="chevron-forward" size={16} color="#D1D1D6" />
             </TouchableOpacity>

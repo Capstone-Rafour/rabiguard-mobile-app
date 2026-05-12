@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
-
-import { HapticTab } from "@/components/haptic-tab";
+import { HapticTab } from "../../components/haptic-tab";
 
 export default function TabLayout() {
   return (
@@ -66,6 +65,13 @@ export default function TabLayout() {
         name="my-page"
         options={{
           title: "마이페이지",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="area-setting"
+        options={{
+          title: "구역 설정",
           href: null,
         }}
       />

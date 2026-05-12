@@ -39,7 +39,7 @@ export default function FirstScreen() {
           <TouchableOpacity
             activeOpacity={0.8}
             className="bg-white py-4 rounded-2xl items-center shadow-md active:bg-gray-100"
-            onPress={() => router.push("/signup")}
+            onPress={() => router.push("/sign-up")}
           >
             <Text className="text-[#5D60F1] text-lg font-bold">
               새로운 계정 만들기
