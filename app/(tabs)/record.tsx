@@ -4,98 +4,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { MOCK_DATA, RecordItem } from "../../constants/data";
 
 // 필터 타입 정의
 type FilterType = "시간순" | "이벤트" | "구역";
-
-// 아이템 타입 정의
-interface RecordItem {
-  id: string;
-  location: string;
-  description: string;
-  timestamp: string;
-  eventType?: string; // 옵셔널로 추가
-}
 
 // 그룹 데이터 타입 정의
 interface GroupedData {
   title: string;
   items: RecordItem[];
 }
-
-// 임시 데이터 - 실제 데이터로 교체 필요
-const MOCK_DATA = [
-  {
-    id: "1",
-    location: "소파",
-    description: "체류 시간 15분 / 1명",
-    timestamp: "12:30",
-    eventType: "특별 조건",
-  },
-  {
-    id: "2",
-    location: "식탁",
-    description: "이벤트 감지",
-    timestamp: "11:45",
-    eventType: "빠른 조건",
-  },
-  {
-    id: "3",
-    location: "침대",
-    description: "움직임 없음",
-    timestamp: "10:20",
-    eventType: "빠른 조건",
-  },
-  {
-    id: "4",
-    location: "현관",
-    description: "출입 감지",
-    timestamp: "09:15",
-    eventType: "빠른 조건",
-  },
-  {
-    id: "5",
-    location: "부엌",
-    description: "체류 시간 5분 / 2명",
-    timestamp: "08:50",
-    eventType: "특별 조건",
-  },
-  {
-    id: "6",
-    location: "소파",
-    description: "체류 시간 30분 / 1명",
-    timestamp: "07:30",
-    eventType: "특별 조건",
-  },
-  {
-    id: "7",
-    location: "서재",
-    description: "이벤트 감지",
-    timestamp: "06:10",
-    eventType: "빠른 조건",
-  },
-  {
-    id: "8",
-    location: "거실",
-    description: "움직임 감지",
-    timestamp: "05:00",
-    eventType: "빠른 조건",
-  },
-  {
-    id: "9",
-    location: "화장실",
-    description: "출입 감지",
-    timestamp: "03:45",
-    eventType: "빠른 조건",
-  },
-  {
-    id: "10",
-    location: "침대",
-    description: "취침 시작",
-    timestamp: "01:20",
-    eventType: "특별 조건",
-  },
-];
 
 export default function RecordScreen() {
   const router = useRouter();
@@ -127,19 +45,6 @@ export default function RecordScreen() {
   };
 
   const groupedData = getGroupedData();
-
-  // const renderItem = ({ item }: { item: (typeof MOCK_DATA)[0] }) => (
-  //   <TouchableOpacity className="flex-row items-center justify-between py-4 px-2 border-b border-gray-100">
-  //     <View>
-  //       <Text className="text-lg font-bold text-gray-800">{item.location}</Text>
-  //       <Text className="text-sm text-gray-400">{item.description}</Text>
-  //     </View>
-  //     <View className="flex-row items-center">
-  //       <Text className="text-sm text-gray-400 mr-2">{item.timestamp}</Text>
-  //       <Ionicons name="chevron-forward" size={18} color="#D1D1D6" />
-  //     </View>
-  //   </TouchableOpacity>
-  // );
 
   return (
     <ScreenContainer>
@@ -181,6 +86,9 @@ export default function RecordScreen() {
                   <TouchableOpacity
                     key={item.id}
                     className={`flex-row items-center justify-between py-5 ${idx !== group.items.length - 1 ? "border-b border-gray-50" : ""}`}
+                    onPress={() => {
+                      router.push(`/record-detail/${item.id}` as any);
+                    }}
                   >
                     <View className="flex-1">
                       <Text className="text-[17px] font-bold text-gray-800 mb-1">
@@ -192,7 +100,7 @@ export default function RecordScreen() {
                     </View>
                     <View className="flex-row items-center">
                       <Text className="text-[13px] text-gray-400 mr-1">
-                        이벤트 발생 시간&날짜
+                        {item.timestamp}
                       </Text>
                       <Ionicons
                         name="chevron-forward"

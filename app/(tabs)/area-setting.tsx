@@ -45,7 +45,9 @@ export default function AreaSettingScreen() {
         {/* 카메라 뷰 */}
         <View className="relative mt-4 rounded-3xl overflow-hidden shadow-md">
           <Image
-            source={{ uri: "https://via.placeholder.com/400x300" }}
+            source={{
+              uri: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1000&auto=format&fit=crop",
+            }}
             className="w-full h-64 bg-gray-200"
           />
 
