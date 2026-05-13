@@ -4,12 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
-    Image,
-    Platform,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function RecordDetailScreen() {
@@ -121,6 +121,12 @@ export default function RecordDetailScreen() {
                 android: { elevation: 4 },
               }),
             }}
+            onPress={() =>
+              router.push({
+                pathname: "/event-clip/[id]" as any,
+                params: { id: record.id },
+              })
+            }
           >
             <Ionicons name="videocam" size={20} color="white" />
             <Text className="text-white font-bold text-[16px] ml-2">

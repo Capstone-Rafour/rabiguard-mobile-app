@@ -69,6 +69,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="event-clip/[id]"
+        options={{
+          title: "이벤트 클립",
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="my-page"
         options={{
           title: "마이페이지",
