@@ -1,10 +1,9 @@
+import AddAreaModal from "@/components/add-area-modal";
 import ScreenContainer from "@/components/screen-container";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-// 👇 분리한 모달 임포트 (경로를 본인의 프로젝트 구조에 맞게 확인하세요)
-import AddAreaModal from "@/components/add-area-modal";
 
 interface CustomArea {
   id: string;
@@ -50,7 +49,7 @@ export default function AreaSettingScreen() {
             className="w-full h-64 bg-gray-200"
           />
 
-          {/* 1. 자동 모드일 때: 서버에서 인식한 기본 박스들 */}
+          {/* 자동 모드일 때 : 서버에서 인식한 기본 박스들 */}
           {mode === "auto" && (
             <>
               <View className="absolute top-20 left-10 border-2 border-red-500 rounded-lg p-1">
@@ -67,7 +66,7 @@ export default function AreaSettingScreen() {
               </View>
             </>
           )}
-          {/* 수동 모드일 때 저장된 박스들 표시 */}
+          {/* 수동 모드일 때 : 저장된 박스들 표시 */}
           {mode === "manual" &&
             customAreas.map((area) => (
               <View
@@ -111,7 +110,7 @@ export default function AreaSettingScreen() {
         </View>
 
         {mode === "auto" ? (
-          // [A] 자동 설정 리스트 (복구된 부분!)
+          // 자동 감지 리스트 -> 추후에 서버에서 받아온 데이터로 매핑
           <View className="mt-6">
             <View className="bg-white rounded-3xl p-2 border border-gray-100">
               <ObjectRow name="소파" status="On" />
@@ -123,7 +122,7 @@ export default function AreaSettingScreen() {
             </Text>
           </View>
         ) : (
-          // [B] 수동 설정 리스트
+          //  수동 설정 리스트
           <View className="mt-6">
             <TouchableOpacity
               onPress={() => setIsModalVisible(true)}
@@ -147,7 +146,6 @@ export default function AreaSettingScreen() {
         )}
       </ScrollView>
 
-      {/* 분리된 모달 사용 */}
       <AddAreaModal
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
