@@ -1,50 +1,22 @@
-# Welcome to your Expo app 👋
+# Rabiguard-Mobile-App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+NPU 기반 온디바이스 AI와 P2P 기술을 결합한 사생활 보호형 스마트 보안 솔루션의 Frontend 저장소입니다.
 
-## Get started
+## 기술 스택
 
-1. Install dependencies
+- Framework : React Native (Expo)
+- Navigation : Expo Router (File-Based Routing)
+- Styling : NativeWInd (Tailwind CSS)
+- Language : TypeScript
 
-   ```bash
-   npm install
-   ```
+## 프로젝트 구조
 
-2. Start the app
+- 'app/' : 로그인 이전 화면 페이지
+- 'app/(tabs)/' : 로그인 이후 화면 페이지
+- 'components/' : 공통 재사용 컴포넌트
+- 'constants/' : 목업 데이터 및 공통 상수
 
-   ```bash
-   npx expo start
-   ```
+## 프로젝트 실행
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. 의존성 설치 : 'npm install'
+2. 실행 : 'npx expo start'
