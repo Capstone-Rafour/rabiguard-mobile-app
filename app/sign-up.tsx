@@ -14,12 +14,26 @@ import ScreenContainer from "../components/screen-container";
 export default function SignUpScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+
+  // 이메일 유효성 검사
+  const validateEmail = (text: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(text);
+  };
 
   const handleEmailNext = () => {
     if (!email) {
-      alert("이메일 주소를 입력해주세요.");
+      setError("이메일 주소를 입력해주세요");
       return;
     }
+
+    if (!validateEmail(email)) {
+      setError("유효한 이메일 주소를 입력해주세요");
+      return;
+    }
+
+    setError("");
 
     router.push({
       pathname: "/verification",
@@ -46,16 +60,28 @@ export default function SignUpScreen() {
             <TextInput
               placeholder="이메일 주소"
               value={email}
-              onChangeText={setEmail}
-              className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg"
+              onChangeText={(text) => {
+                setEmail(text);
+                if (error) setError("");
+              }}
+              className={`w-full h-14 bg-gray-200 rounded-xl px-4 text-lg ${
+                error ? "border border-red-500" : "border-transparent"
+              }`}
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            <View className="h-6 justify-center">
+              {error ? (
+                <Text className="text-red-500 text-sm mt-1 ml-1">{error}</Text>
+              ) : null}
+            </View>
           </View>
 
           {/* 인증 코드 받기 버튼 */}
           <TouchableOpacity
-            className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
+            className={`w-full h-14 rounded-xl justify-center items-center mt-10 ${
+              email && !error ? "bg-[#5D60F1]" : "bg-gray-400"
+            }`}
             onPress={handleEmailNext}
           >
             <Text className="text-white text-lg font-bold">인증 코드 받기</Text>
