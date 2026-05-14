@@ -96,6 +96,13 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="streaming"
+        options={{
+          title: "스트리밍",
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

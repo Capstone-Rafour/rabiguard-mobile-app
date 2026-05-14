@@ -45,7 +45,10 @@ export default function ConnectedHomeScreen() {
           <Text className="text-gray-400 mb-6">
             이벤트를 인식할 구역을 설정합니다
           </Text>
-          <TouchableOpacity className="items-center py-2">
+          <TouchableOpacity
+            className="items-center py-2"
+            onPress={() => router.push("/(tabs)/streaming")}
+          >
             <Text className="text-blue-500 font-semibold text-lg">
               실시간 영상 보기
             </Text>

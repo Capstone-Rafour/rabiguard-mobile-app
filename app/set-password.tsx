@@ -34,23 +34,20 @@ export default function SetPasswordScreen() {
       const userData = {
         email,
         password,
-        assigned_rpis: [
-          { id: "rpi_01", name: "거실 메인 카메라" },
-          { id: "rpi_02", name: "현관 입구 카메라" },
-          { id: "rpi_03", name: "안방 서브 카메라" },
-        ],
+        nickname: email.split("@")[0],
+        assigned_rpis: [],
       };
 
       await AsyncStorage.setItem("userData", JSON.stringify(userData));
-      console.log("계정 정보 저장 완료");
+      console.log("회원가입 완료:", userData);
 
       router.replace({
         pathname: "/home",
         params: { isAutoLoggedIn: "true" },
       });
     } catch (e) {
-      console.error("계정 정보 저장 실패", e);
-      alert("계정 정보 저장에 실패했습니다. 다시 시도해주세요.");
+      console.error("회원가입 실패", e);
+      alert("회원가입에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
