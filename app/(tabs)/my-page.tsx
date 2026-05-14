@@ -59,7 +59,7 @@ export default function MyPageScreen() {
           <MenuRow
             icon="home-outline"
             title="장소 및 기기 관리"
-            onPress={() => console.log("기기 관리")}
+            onPress={() => router.push("/(tabs)/device-management")}
           />
 
           {/* 알림 설정 */}

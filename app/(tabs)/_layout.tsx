@@ -89,6 +89,13 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="device-management"
+        options={{
+          title: "기기 관리",
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

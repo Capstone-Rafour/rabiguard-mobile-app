@@ -4,10 +4,21 @@ import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
 {
   /* 카메라 리스트 모달 컴포넌트 - 실제 카메라 데이터로 교체 필요 */
 }
-const MOCK_CAMERAS = [
-  { id: "1", name: "거실 메인 카메라" },
-  { id: "2", name: "현관 입구 카메라" },
-  { id: "3", name: "안방 서브 카메라" },
+const MOCK_DEVICES = [
+  {
+    id: "1",
+    name: "거실 메인 카메라",
+    model: "AI-Cam-V2",
+    status: "online",
+    lastSync: "2026.05.14",
+  },
+  {
+    id: "2",
+    name: "현관 입구 카메라",
+    model: "AI-Cam-V1",
+    status: "offline",
+    lastSync: "2026.05.12",
+  },
 ];
 
 interface CameraListModalProps {
@@ -30,7 +41,7 @@ export default function CameraListModal({
           <Text className="text-2xl font-bold mb-6">카메라 선택</Text>
 
           <FlatList
-            data={MOCK_CAMERAS}
+            data={MOCK_DEVICES}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TouchableOpacity

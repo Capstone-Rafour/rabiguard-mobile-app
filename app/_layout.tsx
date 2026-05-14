@@ -55,12 +55,8 @@ export default function RootLayout() {
     const isAuthScreen = authScreens.includes(segments[0] as string);
 
     if (!isLoggedIn && !isAuthScreen) {
-      // 로그인 안 됐는데 서비스 내부(tabs 등)로 들어가려 하면?
-      // 가장 첫 화면인 index로 튕겨냅니다.
       router.replace("/");
     } else if (isLoggedIn && isAuthScreen) {
-      // 로그인 됐는데 로그인 화면이나 index에 머물러 있다면?
-      // 메인 홈으로 보냅니다.
       router.replace("/(tabs)/home" as any);
     }
   }, [isLoggedIn, segments, isReady]);
