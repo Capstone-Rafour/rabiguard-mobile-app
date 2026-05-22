@@ -76,7 +76,7 @@ export default function MyPageScreen() {
           <MenuRow
             icon="notifications-outline"
             title="알림 설정"
-            onPress={() => console.log("알림 설정")}
+            onPress={() => router.push("/notification-setting")}
           />
 
           {/* 로그아웃 (구분선 후 배치) */}
