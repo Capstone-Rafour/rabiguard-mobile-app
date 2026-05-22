@@ -19,4 +19,5 @@ NPU 기반 온디바이스 AI와 P2P 기술을 결합한 사생활 보호형 스
 ## 프로젝트 실행
 
 1. 의존성 설치 : 'npm install'
-2. 실행 : 'npx expo start'
+2. 네이티브 폴더(ios, android) 빌드 파일 생성 : npx expo prebuild --clean
+3. 실행 : npx expo run:ios / npx expo run:android

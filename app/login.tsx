@@ -33,6 +33,8 @@ export default function LoginScreen() {
 
         if (email === savedEmail && password === savedPassword) {
           console.log("로그인 성공", { email, password });
+          await AsyncStorage.setItem("isLoggedIn", "true");
+
           router.replace({
             pathname: "/home",
             params: { isAutoLoggedIn: "true" },

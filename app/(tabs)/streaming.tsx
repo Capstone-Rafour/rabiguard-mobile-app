@@ -116,8 +116,12 @@ export default function StreamingScreen() {
               <Text className="text-gray-500 text-xs">연결된 기기</Text>
               <Text className="text-lg font-bold">거실 메인 카메라</Text>
             </View>
-            <View className={`${isConnected ? "bg-green-100" : "bg-gray-200"} px-3 py-1 rounded-lg`}>
-              <Text className={`${isConnected ? "text-green-600" : "text-gray-500"} font-bold text-xs`}>
+            <View
+              className={`${isConnected ? "bg-green-100" : "bg-gray-200"} px-3 py-1 rounded-lg`}
+            >
+              <Text
+                className={`${isConnected ? "text-green-600" : "text-gray-500"} font-bold text-xs`}
+              >
                 {isConnected ? "연결됨" : "연결 중..."}
               </Text>
             </View>
