@@ -86,48 +86,59 @@ export default function EditProfileScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
-        <View className="px-6 pt-4">
-          {/* 뒤로가기 버튼 */}
-          <TouchableOpacity onPress={() => router.back()} className="mb-4">
-            <Ionicons name="chevron-back" size={28} color="black" />
-          </TouchableOpacity>
-
-          <Text className="text-3xl font-bold mb-8">비밀번호 수정</Text>
-
-          {/* 비밀번호 입력 창 */}
-          <View className="mb-4">
-            <Text className="text-sm font-semibold text-gray-600 mb-2">
-              새 비밀번호
-            </Text>
-            <TextInput
-              placeholder="새 비밀번호 입력 (영문/숫자 8~20자)"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (passwordError) setPasswordError("");
-              }}
-              className={`w-full h-14 bg-gray-100 rounded-xl px-4 text-lg ${
-                passwordError ? "border border-red-500" : "border-transparent"
-              }`}
-              secureTextEntry
-              autoCapitalize="none"
-            />
-            <View className="h-6 justify-center">
-              {passwordError ? (
-                <Text className="text-red-500 text-sm mt-1 ml-1">
-                  {passwordError}
-                </Text>
-              ) : null}
+        <View className="felx-1 px-6 pt-4">
+          <View className="px-6 pt-4">
+            {/* 헤더 영역 */}
+            <View className="flex-row items-center justify-between mb-8">
+              <TouchableOpacity
+                onPress={() => router.back()}
+                className="w-10 h-10 justify-center"
+              >
+                <Ionicons name="chevron-back" size={28} color="black" />
+              </TouchableOpacity>
+              <Text className="text-2xl font-bold text-gray-800">
+                비밀번호 수정
+              </Text>
+              <View className="w-10" />
             </View>
-          </View>
 
-          {/* 저장 버튼 */}
-          <TouchableOpacity
-            className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-10 shadow-sm"
-            onPress={handleUpdate}
-          >
-            <Text className="text-white text-lg font-bold">변경사항 저장</Text>
-          </TouchableOpacity>
+            {/* 비밀번호 입력 창 */}
+            <View className="mb-4">
+              <Text className="text-[14px] font-semibold text-gray-600 mb-2">
+                새 비밀번호
+              </Text>
+              <TextInput
+                placeholder="새 비밀번호 입력 (영문/숫자 8~20자)"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (passwordError) setPasswordError("");
+                }}
+                className={`w-full h-14 bg-gray-100 rounded-xl text-lg ${
+                  passwordError ? "border border-red-500" : "border-transparent"
+                }`}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+              <View className="h-6 justify-center">
+                {passwordError ? (
+                  <Text className="text-red-500 text-sm mt-1 ml-1">
+                    {passwordError}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+
+            {/* 저장 버튼 */}
+            <TouchableOpacity
+              className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-6 shadow-sm"
+              onPress={handleUpdate}
+            >
+              <Text className="text-white text-lg font-bold">
+                변경사항 저장
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </ScreenContainer>
