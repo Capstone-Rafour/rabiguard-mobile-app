@@ -103,6 +103,13 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="edit-profile"
+        options={{
+          title: "프로필 편집",
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

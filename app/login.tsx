@@ -16,10 +16,11 @@ export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert("이메일과 비밀번호를 입력해주세요.");
+      alert("이메일과 비밀번호를 모두 입력해주세요.");
       return;
     }
 

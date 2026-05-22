@@ -1,24 +1,29 @@
 import ScreenContainer from "@/components/screen-container";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 
 export default function MyPageScreen() {
   const router = useRouter();
-  const [userInfo, setUserInfo] = useState<{ email: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{
+    email: string;
+    nickname?: string;
+  } | null>(null);
 
-  useEffect(() => {
-    const loadUserInfo = async () => {
-      const data = await AsyncStorage.getItem("userData");
-      if (data) {
-        setUserInfo(JSON.parse(data));
-      }
-    };
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadUserInfo = async () => {
+        const data = await AsyncStorage.getItem("userData");
+        if (data) {
+          setUserInfo(JSON.parse(data));
+        }
+      };
 
-    loadUserInfo();
-  }, []);
+      loadUserInfo();
+    }, []),
+  );
 
   const handleLogout = async () => {
     Alert.alert("로그아웃", "정말 로그아웃 하시겠습니까?", [
@@ -44,11 +49,16 @@ export default function MyPageScreen() {
           </View>
           <View className="ml-4 flex-1">
             <Text className="text-xl font-bold text-gray-800">
-              {userInfo?.email ? userInfo.email.split("@")[0] : "사용자"}님
+              {userInfo?.nickname
+                ? userInfo.nickname
+                : userInfo?.email
+                  ? userInfo.email.split("@")[0]
+                  : "사용자"}
+              님
             </Text>
             <Text className="text-gray-500 text-sm">{userInfo?.email}</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/edit-profile")}>
             <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
           </TouchableOpacity>
         </View>
