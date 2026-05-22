@@ -37,68 +37,76 @@ export default function DeviceManagementScreen() {
 
   return (
     <ScreenContainer>
-      {/* 헤더 */}
-      <View className="flex-row items-center mb-6 px-6 pt-4">
-        <TouchableOpacity onPress={() => router.back()} className="p-1">
-          <Ionicons name="chevron-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text className="text-2xl font-bold ml-3 text-gray-900">기기 관리</Text>
-      </View>
-
-      {/* ScrollView를 사용하면 내부 콘텐츠만큼만 높이를 차지합니다 */}
-      <ScrollView className="px-6" showsVerticalScrollIndicator={false}>
-        {MOCK_DEVICES.map((item) => (
-          <View
-            key={item.id}
-            className="p-5 mb-4 bg-gray-50 rounded-3xl border border-gray-100 shadow-sm"
+      <View className="flex-1 px-6 pt-4">
+        {/* 헤더 영역*/}
+        <View className="flex-row items-center justify-between mb-8">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 justify-center"
           >
-            <View className="flex-row justify-between items-start mb-2">
-              <View>
-                <Text className="text-lg font-bold text-gray-800">
-                  {item.name}
-                </Text>
-                <Text className="text-gray-400 text-sm">{item.model}</Text>
-              </View>
-              <View
-                className={`px-3 py-1 rounded-full ${item.status === "online" ? "bg-blue-100" : "bg-gray-200"}`}
-              >
-                <Text
-                  className={`text-xs font-medium ${item.status === "online" ? "text-blue-600" : "text-gray-500"}`}
+            <Ionicons name="chevron-back" size={28} color="black" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-bold text-gray-800">기기 관리</Text>
+          <View className="w-10" />
+        </View>
+
+        {/* ScrollView를 사용하면 내부 콘텐츠만큼만 높이를 차지합니다 */}
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {MOCK_DEVICES.map((item) => (
+            <View
+              key={item.id}
+              className="p-5 mb-4 bg-gray-50 rounded-3xl border border-gray-100 shadow-sm"
+            >
+              <View className="flex-row justify-between items-start mb-2">
+                <View>
+                  <Text className="text-[18px] font-bold text-gray-800 mb-3">
+                    {item.name}
+                  </Text>
+                  <Text className="text-gray-400 text-[14px]">
+                    {item.model}
+                  </Text>
+                </View>
+                <View
+                  className={`px-3 py-1 rounded-full ${item.status === "online" ? "bg-blue-100" : "bg-gray-200"}`}
                 >
-                  {item.status === "online" ? "연결됨" : "연결 끊김"}
+                  <Text
+                    className={`text-[12px] font-medium ${item.status === "online" ? "text-blue-600" : "text-gray-500"}`}
+                  >
+                    {item.status === "online" ? "연결됨" : "연결 끊김"}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="h-[1px] bg-gray-200 my-3" />
+
+              <View className="flex-row justify-between items-center">
+                <Text className="text-gray-400 text-[12px] italic">
+                  최근 동기화: {item.lastSync}
                 </Text>
+                <TouchableOpacity
+                  onPress={() => handleDelete(item.name)}
+                  className="bg-red-50 px-3 py-1.5 rounded-xl"
+                >
+                  <Text className="text-red-500 text-xs font-semibold">
+                    기기 해제
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
+          ))}
 
-            <View className="h-[1px] bg-gray-200 my-3" />
-
-            <View className="flex-row justify-between items-center">
-              <Text className="text-gray-400 text-xs italic">
-                최근 동기화: {item.lastSync}
-              </Text>
-              <TouchableOpacity
-                onPress={() => handleDelete(item.name)}
-                className="bg-red-50 px-3 py-1.5 rounded-xl"
-              >
-                <Text className="text-red-500 text-xs font-semibold">
-                  기기 해제
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-
-        {/* 버튼이 ScrollView 안에 있으므로 마지막 아이템 바로 밑에 붙고, 함께 스크롤됩니다 */}
-        <TouchableOpacity
-          className="bg-[#5D60F1] h-14 rounded-2xl flex-row items-center justify-center shadow-md mb-10 mt-4"
-          onPress={() => Alert.alert("안내", "새로운 기기를 검색합니다.")}
-        >
-          <Ionicons name="add-circle-outline" size={24} color="white" />
-          <Text className="text-white font-bold text-lg ml-2">
-            새 기기 등록하기
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* 버튼이 ScrollView 안에 있으므로 마지막 아이템 바로 밑에 붙고, 함께 스크롤됩니다 */}
+          <TouchableOpacity
+            className="bg-[#5D60F1] h-14 rounded-2xl flex-row items-center justify-center shadow-md mb-10 mt-4"
+            onPress={() => Alert.alert("안내", "새로운 기기를 검색합니다.")}
+          >
+            <Ionicons name="add-circle-outline" size={24} color="white" />
+            <Text className="text-white font-bold text-lg ml-2">
+              새 기기 등록하기
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
     </ScreenContainer>
   );
 }
