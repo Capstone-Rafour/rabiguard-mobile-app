@@ -8,9 +8,11 @@
     "scheme": "rafourapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "jsEngine": "jsc",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.RafourApp"
+      "bundleIdentifier": "com.anonymous.RafourApp",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "package": "com.anonymous.RafourApp",
@@ -22,8 +24,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.RafourApp"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
@@ -43,12 +44,11 @@
           }
         }
       ],
-      "expo-video",
-      "@react-native-firebase/app"
+      "@react-native-firebase/app",
+      "expo-video"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }

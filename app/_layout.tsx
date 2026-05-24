@@ -1,3 +1,89 @@
+(() => {
+  const root = (typeof globalThis !== "undefined" ? globalThis : global) as any;
+
+  if (typeof root.Event !== "undefined" && typeof root.Proxy !== "undefined") {
+    try {
+      const OriginalEvent = root.Event;
+      root.Event = new Proxy(OriginalEvent, {
+        set: (target: any, prop: string, value: any) => {
+          try {
+            target[prop] = value;
+          } catch (e) {}
+          return true;
+        },
+        defineProperty: (target: any, prop: string, descriptor: any) => {
+          try {
+            Object.defineProperty(target, prop, descriptor);
+          } catch (e) {}
+          return true;
+        },
+      });
+      if (OriginalEvent.prototype) {
+        OriginalEvent.prototype = new Proxy(OriginalEvent.prototype, {
+          set: (target: any, prop: string, value: any) => {
+            try {
+              target[prop] = value;
+            } catch (e) {}
+            return true;
+          },
+          defineProperty: (target: any, prop: string, descriptor: any) => {
+            try {
+              Object.defineProperty(target, prop, descriptor);
+            } catch (e) {}
+            return true;
+          },
+        });
+      }
+    } catch (proxyErr) {
+      if (root.Event) root.Event.NONE = 0;
+    }
+  }
+
+  const defineSafeGlobal = (name: string, value: any) => {
+    if (typeof root[name] === "undefined") {
+      root[name] = value;
+    }
+  };
+
+  if (typeof root.DOMException === "undefined") {
+    const DOMExceptionPolyfill = function (
+      this: any,
+      message?: string,
+      name?: string,
+    ) {
+      this.message = message || "";
+      this.name = name || "DOMException";
+    } as any;
+    DOMExceptionPolyfill.prototype = Object.create(Error.prototype);
+    defineSafeGlobal("DOMException", DOMExceptionPolyfill);
+  }
+  defineSafeGlobal("Performance", function () {});
+  defineSafeGlobal("PerformanceEntry", function () {});
+  defineSafeGlobal("PerformanceObject", function () {});
+  if (typeof root.performance === "undefined") {
+    root.performance = {
+      now: () => Date.now(),
+      getEntries: () => [],
+      memory: { jsHeapSizeLimit: 0, totalJSHeapSize: 0, usedJSHeapSize: 0 },
+      NONE: 0,
+    };
+  }
+  defineSafeGlobal("MessageQueue", function () {});
+  defineSafeGlobal("MemoryInfo", function () {});
+  defineSafeGlobal("PerformanceNavigation", function () {});
+  defineSafeGlobal("PerformanceTiming", function () {});
+  defineSafeGlobal("ReactNativeStartupTiming", {
+    startTime: Date.now(),
+    endInitTime: Date.now(),
+  });
+  defineSafeGlobal("FuseboxSessionObserver", function () {});
+  defineSafeGlobal("LogBoxLog", function (this: any) {
+    this.update = () => {};
+    this.incrementRetryCount = () => {};
+  });
+  defineSafeGlobal("RCTDeviceEventEmitterImpl", function () {});
+})();
+
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   DarkTheme,
