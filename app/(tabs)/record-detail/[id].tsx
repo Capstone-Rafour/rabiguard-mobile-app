@@ -36,16 +36,18 @@ export default function RecordDetailScreen() {
 
   return (
     <ScreenContainer>
-      {/* 헤더 */}
-      <View className="flex-row items-center justify-between px-6 py-4">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full justify-center items-center"
-        >
-          <Ionicons name="chevron-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text className="text-[18px] font-bold">기록 상세</Text>
-        <View className="w-10" />
+      <View className="flex-1 px-6 pt-4">
+        {/* 헤더 영역*/}
+        <View className="flex-row items-center justify-between mb-8">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 justify-center"
+          >
+            <Ionicons name="chevron-back" size={28} color="black" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-bold text-gray-800">기록 상세</Text>
+          <View className="w-10" />
+        </View>
       </View>
 
       <ScrollView

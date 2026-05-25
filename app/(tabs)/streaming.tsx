@@ -72,19 +72,21 @@ export default function StreamingScreen() {
 
   return (
     <ScreenContainer>
-      {/* 헤더 영역 */}
-      <View className="flex-row items-center justify-between px-6 py-4">
-        <TouchableOpacity
-          className="w-10 h-10 rounded-full justify-center items-center"
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text className="text-[18px] font-bold">실시간 스트리밍</Text>
-        <View className="w-10" />
-      </View>
+      <View className="flex-1 px-6 pt-4">
+        {/* 헤더 영역*/}
+        <View className="flex-row items-center justify-between mb-8">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 justify-center"
+          >
+            <Ionicons name="chevron-back" size={28} color="black" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-bold text-gray-800">
+            실시간 스트리밍
+          </Text>
+          <View className="w-10" />
+        </View>
 
-      <View className="flex-1 px-6 mt-4">
         {/* 비디오 플레이어 영역 */}
         <View className="rounded-[32px] overflow-hidden shadow-lg bg-black relative h-64">
           {remoteStream ? (
@@ -96,7 +98,9 @@ export default function StreamingScreen() {
           ) : (
             <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#5D60F1" />
-              <Text className="text-white mt-2 text-xs">연결 중...</Text>
+              <Text className="text-white mt-2 text-s font-semibold">
+                연결 중...
+              </Text>
             </View>
           )}
 
@@ -104,49 +108,27 @@ export default function StreamingScreen() {
           {isConnected && (
             <View className="absolute top-5 left-5 bg-red-600 px-3 py-1 rounded-full flex-row items-center">
               <View className="w-2 h-2 bg-white rounded-full mr-2" />
-              <Text className="text-white text-[12px] font-bold">LIVE</Text>
+              <Text className="text-white text-[14px] font-bold">LIVE</Text>
             </View>
           )}
         </View>
 
         {/* 하단 정보 영역 */}
         <View className="mt-6 space-y-4">
-          <View className="flex-row justify-between items-center bg-gray-100 p-5 rounded-2xl">
+          <View className="flex-row justify-between items-center bg-gray-100 p-5 pt-0 rounded-2xl">
             <View>
-              <Text className="text-gray-500 text-xs">연결된 기기</Text>
+              <Text className="text-gray-500 text-s">연결된 기기</Text>
               <Text className="text-lg font-bold">거실 메인 카메라</Text>
             </View>
             <View
               className={`${isConnected ? "bg-green-100" : "bg-gray-200"} px-3 py-1 rounded-lg`}
             >
               <Text
-                className={`${isConnected ? "text-green-600" : "text-gray-500"} font-bold text-xs`}
+                className={`${isConnected ? "text-green-600" : "text-gray-500"} font-bold text-s`}
               >
                 {isConnected ? "연결됨" : "연결 중..."}
               </Text>
             </View>
-          </View>
-
-          {/* 추가 컨트롤 버튼들 */}
-          <View className="flex-row justify-around py-4">
-            <TouchableOpacity className="items-center">
-              <View className="w-14 h-14 bg-gray-200 rounded-full justify-center items-center mb-2">
-                <Ionicons name="camera" size={24} color="#555" />
-              </View>
-              <Text className="text-xs text-gray-600">스냅샷</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="items-center">
-              <View className="w-14 h-14 bg-gray-200 rounded-full justify-center items-center mb-2">
-                <Ionicons name="mic" size={24} color="#555" />
-              </View>
-              <Text className="text-xs text-gray-600">말하기</Text>
-            </TouchableOpacity>
-            <TouchableOpacity className="items-center">
-              <View className="w-14 h-14 bg-gray-200 rounded-full justify-center items-center mb-2">
-                <Ionicons name="volume-medium" size={24} color="#555" />
-              </View>
-              <Text className="text-xs text-gray-600">소리</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </View>
