@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function FirstScreen() {
@@ -13,12 +13,16 @@ export default function FirstScreen() {
         <View className="items-center mt-20">
           {/* 로고 */}
           <View className="w-24 h-24 bg-white rounded-3xl items-center justify-center shadow-xl">
-            <Text className="text-gray-400 font-bold">logo</Text>
+            <Image
+              source={require("@/assets/images/rabiguard-icon.png")}
+              className="w-16 h-16"
+              resizeMode="contain"
+            />
           </View>
 
           {/* 앱 이름 */}
           <Text className="text-white text-4xl font-extrabold mt-6 tracking-tight">
-            Rafour
+            Rabiguard
           </Text>
         </View>
 
