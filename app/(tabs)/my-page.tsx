@@ -43,7 +43,10 @@ export default function MyPageScreen() {
     <ScreenContainer>
       <View className="flex-1 px-6 pt-10">
         {/* 상단 프로필 영역 (이미지 스타일 참고) */}
-        <View className="flex-row items-center mb-10">
+        <TouchableOpacity
+          onPress={() => router.push("/edit-profile")}
+          className="flex-row items-center mb-10"
+        >
           <View className="w-16 h-16 bg-gray-200 rounded-full justify-center items-center overflow-hidden">
             <Ionicons name="person" size={32} color="#9CA3AF" />
           </View>
@@ -58,10 +61,8 @@ export default function MyPageScreen() {
             </Text>
             <Text className="text-gray-500 text-sm">{userInfo?.email}</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/edit-profile")}>
-            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
-          </TouchableOpacity>
-        </View>
+          <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+        </TouchableOpacity>
 
         {/* 메인 메뉴 카드 */}
         <View className="bg-white rounded-3xl p-2 shadow-sm">
@@ -69,7 +70,7 @@ export default function MyPageScreen() {
           <MenuRow
             icon="home-outline"
             title="장소 및 기기 관리"
-            onPress={() => router.push("/(tabs)/device-management")}
+            onPress={() => router.push("/device-management")}
           />
 
           {/* 알림 설정 */}

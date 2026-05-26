@@ -41,7 +41,7 @@ export default function DeviceManagementScreen() {
         {/* 헤더 영역*/}
         <View className="flex-row items-center justify-between mb-8">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => router.push("/my-page")}
             className="w-10 h-10 justify-center"
           >
             <Ionicons name="chevron-back" size={28} color="black" />

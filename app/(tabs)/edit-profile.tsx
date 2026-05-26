@@ -16,8 +16,6 @@ import {
 export default function EditProfileScreen() {
   const router = useRouter();
   const [password, setPassword] = useState("");
-
-  // 에러 메시지 상태 관리
   const [passwordError, setPasswordError] = useState("");
 
   useFocusEffect(
@@ -64,12 +62,12 @@ export default function EditProfileScreen() {
 
         await AsyncStorage.setItem("userData", JSON.stringify(updateUser));
 
-        Alert.alert("성공", "비밀번호가 수정되었습니다.", [
+        Alert.alert("", "비밀번호가 수정되었습니다.", [
           {
             text: "확인",
             onPress: () => {
               setPassword("");
-              router.push("/my-page");
+              router.back();
             },
           },
         ]);
@@ -90,7 +88,7 @@ export default function EditProfileScreen() {
           {/* 헤더 영역 */}
           <View className="flex-row items-center justify-between mb-8">
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={() => router.push("/my-page")}
               className="w-10 h-10 justify-center"
             >
               <Ionicons name="chevron-back" size={28} color="black" />
@@ -103,7 +101,7 @@ export default function EditProfileScreen() {
 
           {/* 비밀번호 입력 창 */}
           <View className="mb-4">
-            <Text className="text-[14px] font-semibold text-gray-600 mb-2">
+            <Text className="text-[14px] font-semibold text-gray-600 mb-2 ml-2">
               새 비밀번호
             </Text>
             <TextInput
@@ -113,11 +111,12 @@ export default function EditProfileScreen() {
                 setPassword(text);
                 if (passwordError) setPasswordError("");
               }}
-              className={`w-full h-14 bg-gray-100 rounded-xl text-lg ${
+              className={`w-full h-14 bg-gray-200 rounded-xl px-4 text-lg ${
                 passwordError ? "border border-red-500" : "border-transparent"
               }`}
               secureTextEntry
               autoCapitalize="none"
+              style={{ lineHeight: 19 }}
             />
             <View className="h-6 justify-center">
               {passwordError ? (
