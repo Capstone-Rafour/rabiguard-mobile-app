@@ -13,8 +13,8 @@ export default function TabLayout() {
         tabBarStyle: {
           position: "absolute",
           bottom: 25,
-          left: 30,
-          right: 30,
+          width: "92%",
+          marginLeft: "4%",
           height: 64,
           borderRadius: 32,
           backgroundColor: "#F2F2F7",
@@ -28,6 +28,7 @@ export default function TabLayout() {
           shadowOpacity: 0.1,
           shadowRadius: 8,
         },
+
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: "600",

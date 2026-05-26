@@ -16,6 +16,13 @@ export default function HomeScreen() {
   useEffect(() => {
     const loadCameras = async () => {
       try {
+        const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+
+        if (isLoggedIn != "true") {
+          router.replace("/login");
+          return;
+        }
+
         const savedData = await AsyncStorage.getItem("userData");
 
         if (savedData !== null) {

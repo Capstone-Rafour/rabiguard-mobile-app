@@ -31,7 +31,7 @@ export default function MyPageScreen() {
       {
         text: "확인",
         onPress: async () => {
-          await AsyncStorage.removeItem("userData");
+          await AsyncStorage.removeItem("isLoggedIn");
           setUserInfo(null);
           router.replace("/login");
         },

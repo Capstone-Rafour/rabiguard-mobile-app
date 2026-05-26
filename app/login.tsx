@@ -19,8 +19,11 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
+    // 에러 초기화
+    setError("");
+
     if (!email || !password) {
-      alert("이메일과 비밀번호를 모두 입력해주세요.");
+      setError("이메일과 비밀번호를 모두 입력해주세요.");
       return;
     }
 
@@ -32,13 +35,14 @@ export default function LoginScreen() {
           JSON.parse(savedData);
 
         if (email === savedEmail && password === savedPassword) {
-          console.log("로그인 성공", { email, password });
+          await AsyncStorage.setItem("isLoggedIn", "true");
+
           router.replace({
             pathname: "/home",
             params: { isAutoLoggedIn: "true" },
           });
         } else {
-          alert("이메일 또는 비밀번호가 일치하지 않습니다.");
+          setError("이메일 또는 비밀번호가 일치하지 않습니다.");
         }
       }
     } catch (e) {
@@ -79,11 +83,21 @@ export default function LoginScreen() {
               className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg mt-4"
               secureTextEntry
             />
+
+            {/* 에러 메시지 영역 */}
+            <View className="h-6 justify-center">
+              {error ? (
+                <Text className="text-red-500 text-sm mt-2 ml-1">{error}</Text>
+              ) : null}
+            </View>
           </View>
 
           {/* 로그인 버튼 */}
           <TouchableOpacity
-            className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
+            // className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
+            className={`w-full h-14 rounded-xl justify-center items-center mt-10 ${
+              email && password ? "bg-[#5D60F1]" : "bg-gray-400"
+            }`}
             onPress={handleLogin}
           >
             <Text className="text-white text-lg font-bold">
