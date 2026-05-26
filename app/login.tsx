@@ -94,7 +94,6 @@ export default function LoginScreen() {
 
           {/* 로그인 버튼 */}
           <TouchableOpacity
-            // className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
             className={`w-full h-14 rounded-xl justify-center items-center mt-10 ${
               email && password ? "bg-[#5D60F1]" : "bg-gray-400"
             }`}

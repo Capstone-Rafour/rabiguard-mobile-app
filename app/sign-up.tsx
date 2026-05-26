@@ -23,6 +23,8 @@ export default function SignUpScreen() {
   };
 
   const handleEmailNext = () => {
+    setError("");
+
     if (!email) {
       setError("이메일 주소를 입력해주세요");
       return;
@@ -70,6 +72,8 @@ export default function SignUpScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
+
+            {/* 에러 메시지 영역 */}
             <View className="h-6 justify-center">
               {error ? (
                 <Text className="text-red-500 text-sm mt-1 ml-1">{error}</Text>

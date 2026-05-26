@@ -2,18 +2,47 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import ScreenContainer from "../components/screen-container";
 
 export default function FindPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+
+  // 이메일 유효성 검사
+  const validateEmail = (text: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(text);
+  };
+
+  // 인증 코드 받기 버튼
+  const handleEmailNext = () => {
+    setError("");
+
+    if (!email) {
+      setError("이메일 주소를 입력해주세요");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError("유효한 이메일 주소를 입력해주세요");
+      return;
+    }
+
+    setError("");
+
+    router.push({
+      pathname: "/verification",
+      params: { email },
+    });
+  };
 
   return (
     <ScreenContainer>
@@ -41,10 +70,19 @@ export default function FindPasswordScreen() {
             />
           </View>
 
+          {/* 에러 메시지 영역 */}
+          <View className="h-6 justify-center">
+            {error ? (
+              <Text className="text-red-500 text-sm mt-1 ml-1">{error}</Text>
+            ) : null}
+          </View>
+
           {/* 인증 코드 받기 버튼 */}
           <TouchableOpacity
-            className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
-            onPress={() => router.push("/verification")}
+            className={`w-full h-14 rounded-xl justify-center items-center mt-10 ${
+              email ? "bg-[#5D50F1]" : "bg-gray-400"
+            }`}
+            onPress={handleEmailNext}
           >
             <Text className="text-white text-lg font-bold">인증 코드 받기</Text>
           </TouchableOpacity>
