@@ -65,6 +65,7 @@ export default function VerificationScreen() {
               maxLength={1}
               value={digit}
               onChangeText={(text) => handleChange(text, index)}
+              style={{ lineHeight: 25 }}
             />
           ))}
         </View>

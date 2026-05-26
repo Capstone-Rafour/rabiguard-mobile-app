@@ -83,6 +83,7 @@ export default function FindPasswordScreen() {
               className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg"
               keyboardType="email-address"
               autoCapitalize="none"
+              style={{ lineHeight: 19 }}
             />
           </View>
 

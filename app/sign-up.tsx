@@ -86,6 +86,7 @@ export default function SignUpScreen() {
               }`}
               keyboardType="email-address"
               autoCapitalize="none"
+              style={{ lineHeight: 19 }}
             />
 
             {/* 에러 메시지 영역 */}

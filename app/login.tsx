@@ -73,6 +73,7 @@ export default function LoginScreen() {
               className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg"
               keyboardType="email-address"
               autoCapitalize="none"
+              style={{ lineHeight: 19 }}
             />
 
             {/* 비밀번호 입력 창 */}
