@@ -42,8 +42,8 @@ export default function SetPasswordScreen() {
       console.log("회원가입 완료:", userData);
 
       router.replace({
-        pathname: "/home",
-        params: { isAutoLoggedIn: "true" },
+        pathname: "/login",
+        params: { isAutoLoggedIn: "false" },
       });
     } catch (e) {
       console.error("회원가입 실패", e);

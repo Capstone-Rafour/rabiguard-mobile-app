@@ -104,7 +104,7 @@ function SettingRow({
   return (
     <View className="flex-row items-center justify-between px-5 py-7">
       <View className="flex-1 mr-4">
-        <Text className="text-[18px] font-bold text-gray-800 mb-3">
+        <Text className="text-[18px] font-semibold text-gray-800 mb-3">
           {title}
         </Text>
         <Text className="text-[14px] text-gray-400 leading-5">
