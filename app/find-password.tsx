@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -23,7 +24,7 @@ export default function FindPasswordScreen() {
   };
 
   // 인증 코드 받기 버튼
-  const handleEmailNext = () => {
+  const handleEmailNext = async () => {
     setError("");
 
     if (!email) {
@@ -36,12 +37,27 @@ export default function FindPasswordScreen() {
       return;
     }
 
-    setError("");
+    try {
+      const savedData = await AsyncStorage.getItem("userData");
 
-    router.push({
-      pathname: "/verification",
-      params: { email },
-    });
+      if (savedData !== null) {
+        const { email: savedEmail } = JSON.parse(savedData);
+
+        if (email.trim() !== savedEmail.trim()) {
+          setError("가입되지 않은 이메일 주소입니다.");
+          return;
+        }
+      }
+
+      setError("");
+
+      router.push({
+        pathname: "/verification",
+        params: { email },
+      });
+    } catch (e) {
+      setError("계정 정보를 확인하는 중 오류가 발생했습니다.");
+    }
   };
 
   return (
