@@ -1,19 +1,64 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import ScreenContainer from "../components/screen-container";
 
 export default function FindPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+
+  // 이메일 유효성 검사
+  const validateEmail = (text: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(text);
+  };
+
+  // 인증 코드 받기 버튼
+  const handleEmailNext = async () => {
+    setError("");
+
+    if (!email) {
+      setError("이메일 주소를 입력해주세요");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError("유효한 이메일 주소를 입력해주세요");
+      return;
+    }
+
+    try {
+      const savedData = await AsyncStorage.getItem("userData");
+
+      if (savedData !== null) {
+        const { email: savedEmail } = JSON.parse(savedData);
+
+        if (email.trim() !== savedEmail.trim()) {
+          setError("가입되지 않은 이메일 주소입니다.");
+          return;
+        }
+      }
+
+      setError("");
+
+      router.push({
+        pathname: "/verification",
+        params: { email },
+      });
+    } catch (e) {
+      setError("계정 정보를 확인하는 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <ScreenContainer>
@@ -38,13 +83,23 @@ export default function FindPasswordScreen() {
               className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg"
               keyboardType="email-address"
               autoCapitalize="none"
+              style={{ lineHeight: 19 }}
             />
+          </View>
+
+          {/* 에러 메시지 영역 */}
+          <View className="h-6 justify-center">
+            {error ? (
+              <Text className="text-red-500 text-sm mt-1 ml-1">{error}</Text>
+            ) : null}
           </View>
 
           {/* 인증 코드 받기 버튼 */}
           <TouchableOpacity
-            className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
-            onPress={() => router.push("/verification")}
+            className={`w-full h-14 rounded-xl justify-center items-center mt-10 ${
+              email ? "bg-[#5D50F1]" : "bg-gray-400"
+            }`}
+            onPress={handleEmailNext}
           >
             <Text className="text-white text-lg font-bold">인증 코드 받기</Text>
           </TouchableOpacity>

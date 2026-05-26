@@ -73,6 +73,7 @@ export default function LoginScreen() {
               className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg"
               keyboardType="email-address"
               autoCapitalize="none"
+              style={{ lineHeight: 19 }}
             />
 
             {/* 비밀번호 입력 창 */}
@@ -94,7 +95,6 @@ export default function LoginScreen() {
 
           {/* 로그인 버튼 */}
           <TouchableOpacity
-            // className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-12"
             className={`w-full h-14 rounded-xl justify-center items-center mt-10 ${
               email && password ? "bg-[#5D60F1]" : "bg-gray-400"
             }`}

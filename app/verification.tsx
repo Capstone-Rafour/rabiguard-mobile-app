@@ -9,10 +9,13 @@ export default function VerificationScreen() {
   const params = useLocalSearchParams();
   const email = params.email as string;
 
+  const [error, setError] = useState("");
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const inputRef = useRef<(TextInput | null)[]>(Array(6).fill(null));
 
   const handleChange = (text: string, index: number) => {
+    setError("");
+
     if (text.length > 1) return; // 한 글자만 입력 허용
 
     const newCode = [...code];
@@ -34,7 +37,7 @@ export default function VerificationScreen() {
           params: { email },
         });
       } else {
-        alert("인증번호가 올바르지 않습니다.");
+        setError("인증번호가 올바르지 않습니다.");
       }
     }
   };
@@ -49,8 +52,8 @@ export default function VerificationScreen() {
 
         <Text className="text-3xl font-bold mb-4">인증번호</Text>
 
-        {/* 6자리 입력 필드 */}
-        <View className="flex-row justify-between gap-x-2 mb-10">
+        {/* 인증번호 입력 영역 */}
+        <View className="flex-row justify-between gap-x-2 mb-5">
           {code.map((digit, index) => (
             <TextInput
               key={index}
@@ -62,13 +65,21 @@ export default function VerificationScreen() {
               maxLength={1}
               value={digit}
               onChangeText={(text) => handleChange(text, index)}
+              style={{ lineHeight: 25 }}
             />
           ))}
         </View>
 
-        <Text className="text-gray-600 mb-8">
-          인증번호를 메일로 전송했습니다.
-        </Text>
+        {/* 에러 메시지 영역 */}
+        <View className="h-6 justify-center mb-5">
+          {error ? (
+            <Text className="text-red-500 text-sm">{error}</Text>
+          ) : (
+            <Text className="text-gray-600 text-sm">
+              인증번호를 메일로 전송했습니다.
+            </Text>
+          )}
+        </View>
 
         {/* 재전송 버튼 */}
         <TouchableOpacity className="" onPress={() => console.log("재전송")}>

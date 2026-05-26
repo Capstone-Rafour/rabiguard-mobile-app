@@ -50,7 +50,7 @@ export default function NotificationSettingsScreen() {
         {/* 헤더 영역 */}
         <View className="flex-row items-center justify-between mb-8">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => router.push("/my-page")}
             className="w-10 h-10 justify-center"
           >
             <Ionicons name="chevron-back" size={28} color="black" />
@@ -104,7 +104,7 @@ function SettingRow({
   return (
     <View className="flex-row items-center justify-between px-5 py-7">
       <View className="flex-1 mr-4">
-        <Text className="text-[18px] font-bold text-gray-800 mb-3">
+        <Text className="text-[18px] font-semibold text-gray-800 mb-3">
           {title}
         </Text>
         <Text className="text-[14px] text-gray-400 leading-5">
