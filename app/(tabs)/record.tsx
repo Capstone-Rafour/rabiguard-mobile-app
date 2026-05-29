@@ -46,6 +46,14 @@ export default function RecordScreen() {
 
   const groupedData = getGroupedData();
 
+  // 폴더 클릭 시 서브 리스트 화면으로 이동하는 함수
+  const handleGroupPress = (title: string) => {
+    router.push({
+      pathname: "/record-sub-list",
+      params: { title, filterType: filter },
+    });
+  };
+
   return (
     <ScreenContainer>
       <View className="flex-1 px-6">
@@ -78,39 +86,56 @@ export default function RecordScreen() {
         >
           {groupedData.map((group, index) => (
             <View key={index} className="mb-6">
-              <Text className="text-gray-400 font-medium mb-2 ml-1">
-                {group.title}
-              </Text>
-              <View className="bg-white rounded-[32px] px-4 shadow-sm border border-gray-50">
-                {group.items.map((item, idx) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    className={`flex-row items-center justify-between py-5 ${idx !== group.items.length - 1 ? "border-b border-gray-50" : ""}`}
-                    onPress={() => {
-                      router.push(`/record-detail/${item.id}` as any);
-                    }}
-                  >
-                    <View className="flex-1">
-                      <Text className="text-[17px] font-bold text-gray-800 mb-1">
-                        {item.location}
+              {filter === "시간순" ? (
+                <View>
+                  <Text className="text-gray-400 font-medium mb-2 ml-1">
+                    {group.title}
+                  </Text>
+                  <View className="bg-white rounded-[32px] px-4 shadow-sm border border-gray-50">
+                    {group.items.map((item, idx) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        className={`flex-row items-center justify-between py-5 ${idx !== group.items.length - 1 ? "border-b border-gray-50" : ""}`}
+                        onPress={() =>
+                          router.push(`/record-detail/${item.id}` as any)
+                        }
+                      >
+                        <View className="flex-1">
+                          <Text className="text-[17px] font-bold text-gray-800 mb-1">
+                            {item.location}
+                          </Text>
+                          <Text className="text-[13px] text-gray-400">
+                            {item.description}
+                          </Text>
+                        </View>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color="#D1D1D6"
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  className="flex-row justify-between items-center bg-white border border-gray-100 px-5 py-5 rounded-[24px] shadow-sm"
+                  onPress={() => handleGroupPress(group.title)}
+                >
+                  <View className="flex-row items-center">
+                    <View>
+                      <Text className="text-[18px] font-bold text-gray-800">
+                        {group.title}
                       </Text>
-                      <Text className="text-[13px] text-gray-400">
-                        {item.description}
+                      <Text className="text-[12px] text-gray-400 mt-2">
+                        총 {group.items.length}개의 기록
                       </Text>
                     </View>
-                    <View className="flex-row items-center">
-                      <Text className="text-[13px] text-gray-400 mr-1">
-                        {item.timestamp}
-                      </Text>
-                      <Ionicons
-                        name="chevron-forward"
-                        size={16}
-                        color="#D1D1D6"
-                      />
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              )}
             </View>
           ))}
         </ScrollView>

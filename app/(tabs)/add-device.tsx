@@ -1,5 +1,6 @@
 import ScreenContainer from "@/components/screen-container";
 import { Ionicons } from "@expo/vector-icons";
+
 import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -20,6 +21,13 @@ export default function AddDeviceScreen() {
           </TouchableOpacity>
           <Text className="text-2xl font-bold text-gray-800">기기 추가</Text>
           <View className="w-10" />
+        </View>
+
+        {/* 상단 안내 문구 영역 */}
+        <View>
+          <Text className="text-xl font-bold text-gray-900 leading-7">
+            카메라 본체의 QR코드를 {"\n"}화면에 비춰주세요
+          </Text>
         </View>
       </View>
     </ScreenContainer>

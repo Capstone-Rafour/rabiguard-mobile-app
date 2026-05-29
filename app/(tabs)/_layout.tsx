@@ -135,6 +135,13 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="record-sub-list"
+        options={{
+          title: "구역 필터링",
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
