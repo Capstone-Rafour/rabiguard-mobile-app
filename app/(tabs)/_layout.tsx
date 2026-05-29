@@ -128,6 +128,13 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="add-device"
+        options={{
+          title: "기기 추가",
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

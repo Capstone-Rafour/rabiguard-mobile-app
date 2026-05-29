@@ -1,13 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
-import {
-  Alert,
-  FlatList,
-  Modal,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
 {
   /* 카메라 리스트 모달 컴포넌트 - 실제 카메라 데이터로 교체 필요 */
 }
@@ -41,6 +35,8 @@ export default function CameraListModal({
   onSelectCamera,
   cameras,
 }: CameraListModalProps) {
+  const router = useRouter();
+
   return (
     <Modal animationType="slide" transparent={true} visible={visible}>
       <View className="flex-1 justify-end bg-black/40">
@@ -64,7 +60,10 @@ export default function CameraListModal({
 
           <TouchableOpacity
             className="bg-[#5D60F1] h-14 rounded-2xl flex-row items-center justify-center mt-4"
-            onPress={() => Alert.alert("안내", "새로운 기기를 검색합니다.")}
+            onPress={() => {
+              onClose();
+              router.push("/add-device");
+            }}
           >
             <Ionicons name="add-circle-outline" size={24} color="white" />
             <Text className="text-white font-bold text-lg ml-2">

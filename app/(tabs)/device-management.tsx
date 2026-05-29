@@ -98,7 +98,7 @@ export default function DeviceManagementScreen() {
           {/* 버튼이 ScrollView 안에 있으므로 마지막 아이템 바로 밑에 붙고, 함께 스크롤됩니다 */}
           <TouchableOpacity
             className="bg-[#5D60F1] h-14 rounded-2xl flex-row items-center justify-center shadow-md mb-10 mt-4"
-            onPress={() => Alert.alert("안내", "새로운 기기를 검색합니다.")}
+            onPress={() => router.push("/add-device")}
           >
             <Ionicons name="add-circle-outline" size={24} color="white" />
             <Text className="text-white font-bold text-lg ml-2">
