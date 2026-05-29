@@ -22,7 +22,7 @@ export default function RecordSubListScreen() {
         {/* 상단 헤더 영역 */}
         <View className="flex-row items-center justify-between mb-6">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => router.push("/record")}
             className="w-10 h-10 justify-center"
           >
             <Ionicons name="chevron-back" size={28} color="black" />
@@ -45,7 +45,17 @@ export default function RecordSubListScreen() {
               <TouchableOpacity
                 key={item.id}
                 className={`flex-row items-center justify-between py-5 ${idx !== filteredItems.length - 1 ? "border-b border-gray-50" : ""}`}
-                onPress={() => router.push(`/record-detail/${item.id}` as any)}
+                // onPress={() => router.push(`/record-detail/${item.id}` as any)}
+                onPress={() => {
+                  router.push({
+                    pathname: `/record-detail/${item.id}`,
+                    params: {
+                      fromSubList: "true",
+                      title: title,
+                      filterType: filterType,
+                    },
+                  } as any);
+                }}
               >
                 <View className="flex-1">
                   <Text className="text-[17px] font-bold text-gray-800 mb-1">

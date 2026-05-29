@@ -14,7 +14,24 @@ import {
 
 export default function RecordDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { id, fromSubList, title, filterType } = useLocalSearchParams<{
+    id: string;
+    fromSubList?: string;
+    title?: string;
+    filterType?: string;
+  }>();
+
+  const handleBack = () => {
+    if (fromSubList === "true" && title && filterType) {
+      router.push({
+        pathname: "/record-sub-list",
+        params: { title, filterType },
+      });
+    } else {
+      router.push("/record");
+    }
+  };
+
   const record = MOCK_DATA.find((item) => item.id === id) || MOCK_DATA[0];
 
   const InfoRow = ({
@@ -40,7 +57,7 @@ export default function RecordDetailScreen() {
         {/* 헤더 영역*/}
         <View className="flex-row items-center justify-between mb-8">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="w-10 h-10 justify-center"
           >
             <Ionicons name="chevron-back" size={28} color="black" />
