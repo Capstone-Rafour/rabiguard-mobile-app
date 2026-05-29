@@ -36,7 +36,7 @@ export default function RecordDetailScreen() {
 
   return (
     <ScreenContainer>
-      <View className="flex-1 px-6 pt-4">
+      <View className="px-6 pt-4">
         {/* 헤더 영역*/}
         <View className="flex-row items-center justify-between mb-8">
           <TouchableOpacity
@@ -51,6 +51,7 @@ export default function RecordDetailScreen() {
       </View>
 
       <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
@@ -83,7 +84,6 @@ export default function RecordDetailScreen() {
             빠른 조건
           </Text>
           <View className="bg-white rounded-[24px] px-5 shadow-sm border border-gray-50">
-            <InfoRow label="시간" value={record.timestamp} />
             <InfoRow
               label="체류 시간"
               value={record.stayTime || "알 수 없음"}

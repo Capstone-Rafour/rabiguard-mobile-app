@@ -1,6 +1,13 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
-
+import {
+  Alert,
+  FlatList,
+  Modal,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 {
   /* 카메라 리스트 모달 컴포넌트 - 실제 카메라 데이터로 교체 필요 */
 }
@@ -54,6 +61,16 @@ export default function CameraListModal({
               </TouchableOpacity>
             )}
           />
+
+          <TouchableOpacity
+            className="bg-[#5D60F1] h-14 rounded-2xl flex-row items-center justify-center mt-4"
+            onPress={() => Alert.alert("안내", "새로운 기기를 검색합니다.")}
+          >
+            <Ionicons name="add-circle-outline" size={24} color="white" />
+            <Text className="text-white font-bold text-lg ml-2">
+              새 기기 등록하기
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             className="mt-4 p-4 bg-gray-100 rounded-2xl items-center"
