@@ -4,20 +4,52 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { auth, db } from "../../lib/firebase";
 
 export default function MyPageScreen() {
   const router = useRouter();
   const [userInfo, setUserInfo] = useState<{
     email: string;
-    nickname?: string;
+    name?: string;
   } | null>(null);
+
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     const loadUserInfo = async () => {
+  //       const data = await AsyncStorage.getItem("userData");
+  //       if (data) {
+  //         setUserInfo(JSON.parse(data));
+  //       }
+  //     };
+
+  //     loadUserInfo();
+  //   }, []),
+  // );
 
   useFocusEffect(
     React.useCallback(() => {
       const loadUserInfo = async () => {
-        const data = await AsyncStorage.getItem("userData");
-        if (data) {
-          setUserInfo(JSON.parse(data));
+        try {
+          const currentUser = auth.currentUser;
+
+          if (currentUser) {
+            const userDoc = await db
+              .collection("users")
+              .doc(currentUser.uid)
+              .get();
+
+            if (userDoc.exists) {
+              const userData = userDoc.data();
+              setUserInfo({
+                email: userData?.email || currentUser.email || "",
+                name: userData?.name || "",
+              });
+            }
+          } else {
+            router.replace("/login");
+          }
+        } catch (e) {
+          console.error("마이페이지 유저 정보 로드 실해", e);
         }
       };
 
@@ -25,15 +57,37 @@ export default function MyPageScreen() {
     }, []),
   );
 
+  // const handleLogout = async () => {
+  //   Alert.alert("로그아웃", "정말 로그아웃 하시겠습니까?", [
+  //     { text: "취소", style: "cancel" },
+  //     {
+  //       text: "확인",
+  //       onPress: async () => {
+  //         await AsyncStorage.removeItem("isLoggedIn");
+  //         setUserInfo(null);
+  //         router.replace("/login");
+  //       },
+  //     },
+  //   ]);
+  // };
+
   const handleLogout = async () => {
     Alert.alert("로그아웃", "정말 로그아웃 하시겠습니까?", [
       { text: "취소", style: "cancel" },
       {
         text: "확인",
         onPress: async () => {
-          await AsyncStorage.removeItem("isLoggedIn");
-          setUserInfo(null);
-          router.replace("/login");
+          try {
+            await auth.signOut();
+            await AsyncStorage.removeItem("isLoggedIn");
+            setUserInfo(null);
+
+            // 로그인 화면으로 튕겨내기
+            router.replace("/login");
+          } catch (e) {
+            console.error("로그아웃 실패:", e);
+            alert("로그아웃 중 오류가 발생했습니다.");
+          }
         },
       },
     ]);
@@ -52,12 +106,7 @@ export default function MyPageScreen() {
           </View>
           <View className="ml-4 flex-1">
             <Text className="text-xl font-bold text-gray-800">
-              {userInfo?.nickname
-                ? userInfo.nickname
-                : userInfo?.email
-                  ? userInfo.email.split("@")[0]
-                  : "사용자"}
-              님
+              {userInfo?.name ? userInfo.name : "사용자"}님
             </Text>
             <Text className="text-gray-500 text-sm">{userInfo?.email}</Text>
           </View>
@@ -80,7 +129,7 @@ export default function MyPageScreen() {
             onPress={() => router.push("/notification-setting")}
           />
 
-          {/* 로그아웃 (구분선 후 배치) */}
+          {/* 로그아웃 */}
           <View className="h-[1px] bg-gray-100 my-1 mx-4" />
           <MenuRow
             icon="log-out-outline"
@@ -95,7 +144,7 @@ export default function MyPageScreen() {
   );
 }
 
-// 반복되는 메뉴 줄을 위한 컴포넌트
+// 메뉴 줄을 위한 컴포넌트
 function MenuRow({
   icon,
   title,
