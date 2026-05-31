@@ -11,12 +11,14 @@ import {
   View,
 } from "react-native";
 import ScreenContainer from "../components/screen-container";
+import { auth } from "../lib/firebase";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     // 에러 초기화
@@ -28,25 +30,38 @@ export default function LoginScreen() {
     }
 
     try {
-      const savedData = await AsyncStorage.getItem("userData");
+      setLoading(true);
 
-      if (savedData !== null) {
-        const { email: savedEmail, password: savedPassword } =
-          JSON.parse(savedData);
+      const userCredential = await auth.signInWithEmailAndPassword(
+        email.trim(),
+        password,
+      );
 
-        if (email === savedEmail && password === savedPassword) {
-          await AsyncStorage.setItem("isLoggedIn", "true");
+      const user = userCredential.user;
 
-          router.replace({
-            pathname: "/home",
-            params: { isAutoLoggedIn: "true" },
-          });
-        } else {
-          setError("이메일 또는 비밀번호가 일치하지 않습니다.");
-        }
+      await AsyncStorage.setItem("isLoggedIn", "true");
+
+      setLoading(false);
+
+      router.replace({
+        pathname: "/home",
+        params: { isAutoLoggedIn: "true" },
+      });
+    } catch (e: any) {
+      setLoading(false);
+      console.error("로그인 실패 오차:", e);
+
+      if (
+        e.code === "auth/user-not-found" ||
+        e.code === "auth/wrong-password" ||
+        e.code === "auth/invalid-credential"
+      ) {
+        setError("이메일 또는 비밀번호가 일치하지 않습니다.");
+      } else if (e.code === "auth/invalid-email") {
+        setError("유효한 이메일 주소 형식이 아닙니다.");
+      } else {
+        setError("로그인에 실패했습니다. 다시 시도해주세요.");
       }
-    } catch (e) {
-      alert("계정 정보를 불러오는데 실패했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -74,6 +89,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               style={{ lineHeight: 19 }}
+              editable={!loading}
             />
 
             {/* 비밀번호 입력 창 */}
@@ -83,6 +99,7 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               className="w-full h-14 bg-gray-200 rounded-xl px-4 text-lg mt-4"
               secureTextEntry
+              editable={!loading}
             />
 
             {/* 에러 메시지 영역 */}
@@ -99,6 +116,7 @@ export default function LoginScreen() {
               email && password ? "bg-[#5D60F1]" : "bg-gray-400"
             }`}
             onPress={handleLogin}
+            disabled={loading}
           >
             <Text className="text-white text-lg font-bold">
               기존 계정으로 로그인
@@ -109,6 +127,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             className="mt-4 items-center"
             onPress={() => router.push("/find-password")}
+            disabled={loading}
           >
             <Text className="text-[#5D60F1] text-base">비밀번호 찾기</Text>
           </TouchableOpacity>

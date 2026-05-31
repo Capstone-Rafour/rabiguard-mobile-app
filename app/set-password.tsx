@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -11,6 +10,7 @@ import {
   View,
 } from "react-native";
 import ScreenContainer from "../components/screen-container";
+import { auth, db } from "../lib/firebase";
 
 export default function SetPasswordScreen() {
   const router = useRouter();
@@ -19,9 +19,13 @@ export default function SetPasswordScreen() {
 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleComplete = async () => {
+    if (loading) return;
+
     const passwordRegex = /^[a-zA-Z0-9]{8,20}$/;
+
     if (!passwordRegex.test(password)) {
       setError("영문, 숫자를 포함하여 8 ~ 20자");
       return;
@@ -29,25 +33,48 @@ export default function SetPasswordScreen() {
 
     setError("");
 
-    // AsyncStorage에 이메일과 비밀번호 저장
     try {
-      const userData = {
-        email,
+      setLoading(true);
+
+      const userCredential = await auth.createUserWithEmailAndPassword(
+        email.trim(),
         password,
-        nickname: email.split("@")[0],
-        assigned_rpis: [],
-      };
+      );
 
-      await AsyncStorage.setItem("userData", JSON.stringify(userData));
-      console.log("회원가입 완료:", userData);
+      const user = userCredential.user;
 
+      if (user) {
+        const userData = {
+          email: user.email,
+          id: user.uid,
+          name: email.split("@")[0],
+          password_hash: "firebase_authenticated_user",
+        };
+
+        await db.collection("users").doc(user.uid).set(userData);
+        console.log("🔥 파이어베이스 회원가입 및 DB 등록 성공:", userData);
+      }
+      setLoading(false);
+
+      // 로그인 화면으로 이동
       router.replace({
         pathname: "/login",
         params: { isAutoLoggedIn: "false" },
       });
-    } catch (e) {
+    } catch (e: any) {
+      setLoading(false);
       console.error("회원가입 실패", e);
-      alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+
+      if (
+        e.code === "auth/email-already-in-check" ||
+        e.code === "auth/email-already-in-use"
+      ) {
+        setError("이미 가입된 이메일 주소입니다.");
+      } else if (e.code === "auth/weak-password") {
+        setError("비밀번호가 너무 취약합니다.");
+      } else {
+        setError("회원가입에 실패했습니다. 다시 시도해주세요.");
+      }
     }
   };
 
@@ -59,7 +86,11 @@ export default function SetPasswordScreen() {
       >
         <View className="px-6 pt-4">
           {/* 뒤로가기 버튼 */}
-          <TouchableOpacity onPress={() => router.back()} className="mb-4">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mb-4"
+            disabled={loading}
+          >
             <Ionicons name="chevron-back" size={28} color="black" />
           </TouchableOpacity>
 
@@ -77,6 +108,7 @@ export default function SetPasswordScreen() {
               className={`w-full h-14 bg-gray-200 rounded-xl px-4 text-lg ${error ? "border border-red-500" : ""}`}
               secureTextEntry // 비밀번호 입력 시 글자 숨김
               autoCapitalize="none"
+              editable={!loading}
             />
           </View>
 
@@ -89,10 +121,15 @@ export default function SetPasswordScreen() {
 
           {/* 완료 버튼 */}
           <TouchableOpacity
-            className="w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-6"
+            className={`w-full h-14 bg-[#5D60F1] rounded-xl justify-center items-center mt-6 ${
+              password && !error && !loading ? "bg-[#5D60F1]" : "bg-gray-400"
+            }`}
             onPress={handleComplete}
+            disabled={loading}
           >
-            <Text className="text-white text-lg font-bold">확인</Text>
+            <Text className="text-white text-lg font-bold">
+              {loading ? "가입 처리 중..." : "확인"}
+            </Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

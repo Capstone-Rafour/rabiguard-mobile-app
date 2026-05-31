@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
 import React from "react";
 import { FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
@@ -65,7 +65,7 @@ export default function CameraListModal({
               router.push("/add-device");
             }}
           >
-            <Ionicons name="add-circle-outline" size={24} color="white" />
+            <AntDesign name="plus" size={20} color="white" />
             <Text className="text-white font-bold text-lg ml-2">
               새 기기 등록하기
             </Text>

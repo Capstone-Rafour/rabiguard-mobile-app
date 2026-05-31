@@ -1,5 +1,6 @@
 import ScreenContainer from "@/components/screen-container";
 import { Ionicons } from "@expo/vector-icons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -100,7 +101,7 @@ export default function DeviceManagementScreen() {
             className="bg-[#5D60F1] h-14 rounded-2xl flex-row items-center justify-center shadow-md mb-10 mt-4"
             onPress={() => router.push("/add-device")}
           >
-            <Ionicons name="add-circle-outline" size={24} color="white" />
+            <AntDesign name="plus" size={20} color="white" />
             <Text className="text-white font-bold text-lg ml-2">
               새 기기 등록하기
             </Text>

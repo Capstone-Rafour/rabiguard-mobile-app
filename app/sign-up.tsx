@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -11,11 +10,13 @@ import {
   View,
 } from "react-native";
 import ScreenContainer from "../components/screen-container";
+import { auth } from "../lib/firebase";
 
 export default function SignUpScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // 이메일 유효성 검사
   const validateEmail = (text: string) => {
@@ -37,23 +38,26 @@ export default function SignUpScreen() {
     }
 
     try {
-      const savedData = await AsyncStorage.getItem("userData");
+      setLoading(true);
 
-      if (savedData !== null) {
-        const { email: savedEmail } = JSON.parse(savedData);
+      const signInMethods = await auth.fetchSignInMethodsForEmail(email.trim());
 
-        if (email.trim() === savedEmail.trim()) {
-          setError("이미 가입된 이메일 주소입니다.");
-          return;
-        }
+      if (signInMethods.length > 0) {
+        setError("이미 가입된 이메일 주소입니다.");
+        setLoading(false);
+        return;
       }
 
       setError("");
+      setLoading(false);
       router.push({
         pathname: "/verification",
         params: { email },
       });
-    } catch (e) {
+    } catch (e: any) {
+      setLoading(false);
+
+      console.error(e);
       setError("계정 정보를 확인하는 중 오류가 발생했습니다.");
     }
   };
@@ -100,9 +104,10 @@ export default function SignUpScreen() {
           {/* 인증 코드 받기 버튼 */}
           <TouchableOpacity
             className={`w-full h-14 rounded-xl justify-center items-center mt-10 ${
-              email && !error ? "bg-[#5D60F1]" : "bg-gray-400"
+              email && !error && !loading ? "bg-[#5D60F1]" : "bg-gray-400"
             }`}
             onPress={handleEmailNext}
+            disabled={loading}
           >
             <Text className="text-white text-lg font-bold">인증 코드 받기</Text>
           </TouchableOpacity>

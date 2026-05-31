@@ -82,7 +82,7 @@ export default function RecordScreen() {
         {/* 그룹별 기록 리스트 영역 */}
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 60 }}
         >
           {groupedData.map((group, index) => (
             <View key={index} className="mb-6">
