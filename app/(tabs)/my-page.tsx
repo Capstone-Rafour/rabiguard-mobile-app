@@ -13,19 +13,6 @@ export default function MyPageScreen() {
     name?: string;
   } | null>(null);
 
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     const loadUserInfo = async () => {
-  //       const data = await AsyncStorage.getItem("userData");
-  //       if (data) {
-  //         setUserInfo(JSON.parse(data));
-  //       }
-  //     };
-
-  //     loadUserInfo();
-  //   }, []),
-  // );
-
   useFocusEffect(
     React.useCallback(() => {
       const loadUserInfo = async () => {
@@ -56,20 +43,6 @@ export default function MyPageScreen() {
       loadUserInfo();
     }, []),
   );
-
-  // const handleLogout = async () => {
-  //   Alert.alert("로그아웃", "정말 로그아웃 하시겠습니까?", [
-  //     { text: "취소", style: "cancel" },
-  //     {
-  //       text: "확인",
-  //       onPress: async () => {
-  //         await AsyncStorage.removeItem("isLoggedIn");
-  //         setUserInfo(null);
-  //         router.replace("/login");
-  //       },
-  //     },
-  //   ]);
-  // };
 
   const handleLogout = async () => {
     Alert.alert("로그아웃", "정말 로그아웃 하시겠습니까?", [

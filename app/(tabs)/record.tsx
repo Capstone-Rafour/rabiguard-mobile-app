@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { MOCK_DATA, RecordItem } from "../../constants/data";
+import { RecordItem } from "../../constants/data";
 import { db } from "../../lib/firebase";
 
 // 필터 타입 정의
@@ -81,7 +81,7 @@ export default function RecordScreen() {
 
     const key = filter === "구역" ? "location" : "eventType";
 
-    const groups = MOCK_DATA.reduce(
+    const groups = records.reduce(
       (acc: { [key: string]: RecordItem[] }, item) => {
         const groupName =
           (item[key as keyof typeof item] as string) || "알 수 없음";
@@ -104,7 +104,11 @@ export default function RecordScreen() {
   const handleGroupPress = (title: string) => {
     router.push({
       pathname: "/record-sub-list",
-      params: { title, filterType: filter },
+      params: {
+        title,
+        filterType: filter,
+        serverRecords: JSON.stringify(records),
+      },
     });
   };
 
