@@ -12,18 +12,11 @@ export default function FirstScreen() {
         {/* 상단 로고 및 앱 이름 */}
         <View className="items-center mt-20">
           {/* 로고 */}
-          {/* <View className="w-24 h-24 bg-white rounded-3xl items-center justify-center shadow-xl">
-            <Image
-              source={require("@/assets/images/rabiguard-logo2.png")}
-              className="w-16 h-16"
-              resizeMode="contain"
-            />
-          </View> */}
           <View className="w-24 h-24 items-center justify-center">
             <Image
               source={require("@/assets/images/rabiguard-logo3.png")}
               className="w-full h-full rounded-3xl"
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </View>
 

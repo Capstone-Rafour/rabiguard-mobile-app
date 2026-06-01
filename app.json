@@ -35,8 +35,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/rabiguard-icon2.png",
-          "imageWidth": 90,
+          "image": "./assets/images/rabiguard-logo3.png",
+          "imageWidth": 100,
           "resizeMode": "contain",
           "backgroundColor": "#5D60F1",
           "dark": {
