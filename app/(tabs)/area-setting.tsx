@@ -2,6 +2,8 @@ import AddAreaModal from "@/components/add-area-modal";
 import ScreenContainer from "@/components/screen-container";
 import { db } from "@/lib/firebase";
 import { Ionicons } from "@expo/vector-icons";
+import database from "@react-native-firebase/database";
+import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import {
   addDoc,
@@ -22,6 +24,10 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import {
+  RTCPeerConnection,
+  RTCSessionDescription,
+} from "react-native-webrtc";
 
 interface ZoneData {
   id: string;
@@ -54,6 +60,9 @@ export default function AreaSettingScreen() {
     width: number;
     height: number;
   } | null>(null);
+  const [cameraImage, setCameraImage] = useState<string | null>(null);
+  const chunksRef = useRef<Uint8Array[]>([]);
+  const pcRef = useRef<any>(null);
 
   const startCoords = useRef({ x: 0, y: 0 });
   const currentDragBoxRef = useRef<{
@@ -89,6 +98,7 @@ export default function AreaSettingScreen() {
       unsubscribeAuto();
       unsubscribeManual();
     };
+
   }, [screenWidth]);
 
   const parseSnapshot = (snapshot: any): ZoneData[] => {
@@ -117,6 +127,92 @@ export default function AreaSettingScreen() {
       };
     });
   };
+
+  const captureAndReceiveImage = async () => {
+    try {
+      await firestore().collection("commands").add({
+        type: "trigger_roi",
+        created_at: firestore.FieldValue.serverTimestamp(),
+      });
+  
+      await new Promise<void>((resolve) => {
+        database()
+          .ref("signaling/smart_cctv/data_status")
+          .on("value", (snapshot: any) => {
+            if (snapshot.val() === "ready") {
+              database().ref("signaling/smart_cctv/data_status").off();
+              resolve();
+            }
+          });
+      });
+  
+      startImageConnection();
+    } catch (e) {
+      console.warn("이미지 캡처 실패:", e);
+    }
+  };
+
+  const startImageConnection = async () => {
+    await database().ref("signaling/smart_cctv/data_offer").remove();
+    await database().ref("signaling/smart_cctv/data_answer").remove();
+    await database().ref("signaling/smart_cctv/data_status").remove();
+  
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
+    }) as any;
+    pcRef.current = pc;
+  
+    const dc = pc.createDataChannel("file-transfer");
+    dc.binaryType = "arraybuffer";
+  
+    dc.onmessage = (e: any) => {
+      const data = e.data;
+  
+      if (typeof data === "string") {
+        try {
+          const msg = JSON.parse(data);
+  
+          if (msg.type === "file_start") {
+            chunksRef.current = [];
+          } else if (msg.type === "file_end") {
+            const totalLength = chunksRef.current.reduce(
+              (acc, chunk) => acc + chunk.length, 0
+            );
+            const combined = new Uint8Array(totalLength);
+            let offset = 0;
+            for (const chunk of chunksRef.current) {
+              combined.set(chunk, offset);
+              offset += chunk.length;
+            }
+            const base64 = btoa(String.fromCharCode(...combined));
+            setCameraImage(`data:image/jpeg;base64,${base64}`);
+            chunksRef.current = [];
+          } else if (msg.type === "transfer_end") {
+            pc.close();
+          }
+        } catch {}
+      } else {
+        chunksRef.current.push(new Uint8Array(data));
+      }
+    };
+
+    const offer = await pc.createOffer({});
+  await pc.setLocalDescription(offer);
+
+  await database().ref("signaling/smart_cctv/data_offer").set({
+    sdp: offer.sdp,
+    type: offer.type,
+  });
+
+  database()
+    .ref("signaling/smart_cctv/data_answer")
+    .on("value", async (snapshot: any) => {
+      const answer = snapshot.val();
+      if (answer && answer.sdp && !pc.currentRemoteDescription) {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      }
+    });
+};
 
   // 🛠️ 치트키: PanResponder 대신 View 자체의 네이티브 터치 이벤트 핸들러 사용
   const handleTouchStart = (evt: any) => {
@@ -250,9 +346,11 @@ export default function AreaSettingScreen() {
             {/* 배경 이미지 레이어 */}
             <View className="absolute inset-0" pointerEvents="none">
               <Image
-                source={{
-                  uri: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1000&auto=format&fit=crop",
-                }}
+                source={
+                  cameraImage
+                    ? { uri: cameraImage }
+                    : { uri: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1000&auto=format&fit=crop" }
+                }
                 className="w-full h-full"
               />
             </View>
