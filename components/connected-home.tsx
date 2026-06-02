@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -145,7 +146,18 @@ export default function ConnectedHomeScreen() {
           <TouchableOpacity
             className="w-full h-14 bg-[#5D60F1] rounded-2xl flex-row justify-center items-center"
             activeOpacity={0.8}
-            onPress={() => router.push("/(tabs)/streaming")}
+            onPress={async () => {
+              try {
+                await firestore().collection("commands").add({
+                  type: "start_stream",
+                  created_at: firestore.FieldValue.serverTimestamp(),
+                });
+                console.log("start_stream 명령 전송 완료");
+                router.push("/(tabs)/streaming");
+              } catch (e) {
+                console.warn("start_stream 명령 전송 실패:", e);
+              }
+            }}
           >
             <Ionicons
               name="play-circle"

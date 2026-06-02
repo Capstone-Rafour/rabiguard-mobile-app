@@ -85,6 +85,8 @@
 })();
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import firestore from "@react-native-firebase/firestore";
+import messaging from "@react-native-firebase/messaging";
 import {
   DarkTheme,
   DefaultTheme,
@@ -94,6 +96,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { Alert } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 
@@ -109,6 +112,93 @@ export default function RootLayout() {
 
   // 로그인 상태 확인
   const isLoggedIn = false; // 실제 로그인 상태로 대체
+
+  // FCM 토큰 등록
+useEffect(() => {
+  async function registerFCMToken() {
+    try {
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (enabled) {
+        const token = await messaging().getToken();
+        console.log("FCM Token:", token);
+        await firestore().collection("fcm_tokens").doc("device").set({
+          token: token,
+          updated_at: firestore.FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      console.warn("FCM 토큰 등록 실패:", e);
+    }
+  }
+  registerFCMToken();
+}, []);
+
+// FCM 알림 수신 핸들러
+useEffect(() => {
+  // 앱이 포그라운드일 때 알림 수신
+  const unsubscribeForeground = messaging().onMessage(async (remoteMessage) => {
+    const eventId = remoteMessage.data?.event_id || "";
+    Alert.alert(
+      remoteMessage.notification?.title || "보안 알림",
+      remoteMessage.notification?.body || "",
+      [
+        { text: "닫기", style: "cancel" },
+        {
+          text: "확인하기",
+          onPress: () => {
+            router.push({
+              pathname: "/(tabs)/event-clip/[id]",
+              params: {
+                korean_text: remoteMessage.notification?.body || "",
+                id: "alert",
+                event_id: eventId,
+              },
+            } as any);
+          },
+        },
+      ]
+    );
+  });
+
+  // 앱이 백그라운드에서 알림 탭했을 때
+  messaging().onNotificationOpenedApp((remoteMessage) => {
+    const eventId = remoteMessage.data?.event_id || "";
+    router.push({
+      pathname: "/(tabs)/event-clip/[id]",
+      params: {
+        korean_text: remoteMessage.notification?.body || "",
+        id: "alert",
+        event_id: eventId,
+      },
+    } as any);
+  });
+
+  // 앱이 완전히 꺼진 상태에서 알림 탭했을 때
+  messaging()
+  .getInitialNotification()
+  .then((remoteMessage) => {
+    if (remoteMessage && remoteMessage.sentTime && 
+        Date.now() - remoteMessage.sentTime < 5000) {  // 5초 이내 알림만 처리
+      const eventId = remoteMessage.data?.event_id || "";
+      router.push({
+        pathname: "/(tabs)/event-clip/[id]",
+        params: {
+          korean_text: remoteMessage.notification?.body || "",
+          id: "alert",
+          event_id: eventId,
+        },
+      } as any);
+    }
+  });
+
+  return () => {
+    unsubscribeForeground();
+  };
+}, []);
 
   useEffect(() => {
     async function prepare() {
