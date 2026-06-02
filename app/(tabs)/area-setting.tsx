@@ -1,9 +1,37 @@
 import AddAreaModal from "@/components/add-area-modal";
 import ScreenContainer from "@/components/screen-container";
+import { db } from "@/lib/firebase";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
+
+// Firebase에서 불러온 데이터 타입
+interface AutoZone {
+  id: string;
+  className: string;
+  isActive: boolean;
+  minPeople: number;
+  enterThresholdSec: number;
+
+  // 박스 좌표
+  box: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  };
+}
 
 interface CustomArea {
   id: string;
@@ -16,6 +44,62 @@ export default function AreaSettingScreen() {
   const [mode, setMode] = useState<"auto" | "manual">("auto");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [customAreas, setCustomAreas] = useState<CustomArea[]>([]);
+  const [autoZones, setAutoZones] = useState<AutoZone[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { width: screenWidth } = useWindowDimensions();
+
+  useEffect(() => {
+    const zonesRef = collection(db, "auto_zones");
+
+    const unsubscribe = onSnapshot(zonesRef, (snapshot) => {
+      const zonesData: AutoZone[] = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        const polygon = data.polygon || [];
+
+        // 여기서는 파이어베이스 좌표를 그대로 절대값 크기(px)로 치환하는 기본 예시
+        const xValues = polygon.map((p: any) => p.x);
+        const yValues = polygon.map((p: any) => p.y);
+
+        const minX = xValues.length ? Math.min(...xValues) : 0;
+        const maxX = xValues.length ? Math.max(...xValues) : 100;
+        const minY = yValues.length ? Math.min(...yValues) : 0;
+        const maxY = yValues.length ? Math.max(...yValues) : 100;
+
+        // 모바일 화면(h-64 = 256px) 내부 안으로 들어오도록 스케일 보정이 필요할 경우
+        // 아래 box 계산식에서 비율을 곱해주시면 됩니다. (예: minX * 0.25)
+        return {
+          id: docSnap.id,
+          className: data.class_name || "알 수 없는 객체",
+          isActive: data.is_active ?? true,
+          minPeople: data.min_people || 1,
+          enterThresholdSec: data.enter_threshold_sec || 2,
+          box: {
+            left: minX,
+            top: minY,
+            width: maxX - minX || 80,
+            height: maxY - minY || 80,
+          },
+        };
+      });
+
+      setAutoZones(zonesData);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // 자동 감지 객체 활성화/비활성화 토글 함수
+  const handleToggleAutoZone = async (id: string, currentStatus: boolean) => {
+    try {
+      const zoneDocRef = doc(db, "auto_zones", id);
+      await updateDoc(zoneDocRef, {
+        is_active: !currentStatus,
+      });
+    } catch (error) {
+      console.error("구역 상태 업데이트 실패:", error);
+    }
+  };
 
   const handleAddArea = (name: string) => {
     const newArea: CustomArea = {
@@ -44,46 +128,83 @@ export default function AreaSettingScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* 카메라 뷰 */}
-          <View className="relative mt-4 rounded-3xl overflow-hidden shadow-md">
+          <View className="relative mt-4 rounded-3xl overflow-hidden shadow-md bg-gray-200">
             <Image
               source={{
                 uri: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1000&auto=format&fit=crop",
               }}
-              className="w-full h-64 bg-gray-200"
+              className="w-full h-64"
             />
 
-            {/* 자동 모드일 때 : 서버에서 인식한 기본 박스들 */}
-            {mode === "auto" && (
+            {isLoading ? (
+              <View className="absolute inset-0 justify-center items-center bg-black/10">
+                <ActivityIndicator size="large" color="#5D60F1" />
+              </View>
+            ) : (
               <>
-                <View className="absolute top-20 left-10 border-2 border-red-500 rounded-lg p-1">
-                  <View className="bg-red-500 self-start px-1 rounded-sm">
-                    <Text className="text-white text-[10px]">화분</Text>
-                  </View>
-                  <View className="w-20 h-32" />
+                {/* 이미지 위에 절대 좌표로 박스를 오버레이할 컨테이너 */}
+                <View className="absolute inset-0">
+                  {mode === "auto" &&
+                    autoZones.map((zone) => {
+                      if (!zone.isActive) return null;
+
+                      // 🛠️ 확인된 AI 서버 원본 영상 해상도 세팅
+                      const SERVER_WIDTH = 640;
+                      const SERVER_HEIGHT = 480;
+
+                      // 🛠️ 우리 앱 이미지 뷰의 실제 크기 세팅
+                      const APP_IMAGE_HEIGHT = 256; // h-64는 고정 256px
+                      // 횡 패딩(px-6 = 24px * 2 = 48px)을 제외한 실제 이미지의 가로 너비 계산
+                      const APP_IMAGE_WIDTH = screenWidth - 48;
+
+                      // 640x480 화면을 모바일 화면 크기로 압축하는 마법의 비율
+                      const scaleX = APP_IMAGE_WIDTH / SERVER_WIDTH;
+                      const scaleY = APP_IMAGE_HEIGHT / SERVER_HEIGHT;
+
+                      // 모바일 해상도에 맞게 픽셀 좌표 재계산
+                      const scaledLeft = zone.box.left * scaleX;
+                      const scaledTop = zone.box.top * scaleY;
+                      const scaledWidth = zone.box.width * scaleX;
+                      const scaledHeight = zone.box.height * scaleY;
+
+                      return (
+                        <View
+                          key={zone.id}
+                          className="absolute border-2 border-red-500 rounded-lg p-0.5"
+                          style={{
+                            left: scaledLeft,
+                            top: scaledTop,
+                            width: Math.max(scaledWidth, 50), // 탁구대 크기에 맞게 최소 너비 보장
+                            height: Math.max(scaledHeight, 40), // 최소 높이 보장
+                          }}
+                        >
+                          <View className="bg-red-500 self-start px-1 rounded-sm">
+                            <Text className="text-white text-[10px] font-bold">
+                              {zone.className}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
                 </View>
-                <View className="absolute top-24 right-10 border-2 border-red-500 rounded-lg p-1">
-                  <View className="bg-red-500 self-start px-1 rounded-sm">
-                    <Text className="text-white text-[10px]">소파</Text>
-                  </View>
-                  <View className="w-32 h-24" />
-                </View>
+
+                {/* 수동 모드일 때 (기존 유지) */}
+                {mode === "manual" &&
+                  customAreas.map((area) => (
+                    <View
+                      key={area.id}
+                      className="absolute top-20 right-10 border-2 border-red-500 rounded-lg"
+                    >
+                      <View className="bg-red-500 self-start px-2 py-0.5">
+                        <Text className="text-white text-[12px] font-bold">
+                          {area.name}
+                        </Text>
+                      </View>
+                      <View className="w-40 h-28" />
+                    </View>
+                  ))}
               </>
             )}
-            {/* 수동 모드일 때 : 저장된 박스들 표시 */}
-            {mode === "manual" &&
-              customAreas.map((area) => (
-                <View
-                  key={area.id}
-                  className="absolute top-20 right-10 border-2 border-red-500 rounded-lg"
-                >
-                  <View className="bg-red-500 self-start px-2 py-0.5">
-                    <Text className="text-white text-[12px] font-bold">
-                      {area.name}
-                    </Text>
-                  </View>
-                  <View className="w-40 h-28" />
-                </View>
-              ))}
           </View>
 
           {/* 자동/수동 탭 */}
@@ -113,20 +234,35 @@ export default function AreaSettingScreen() {
           </View>
 
           {mode === "auto" ? (
-            // 자동 감지 리스트 -> 추후에 서버에서 받아온 데이터로 매핑
+            // 자동 감지 리스트 -> 파이어베이스에서 실시간 렌더링 및 클릭 토글 연동
             <View className="mt-6">
-              <View className="bg-white rounded-3xl p-2 border border-gray-100">
-                <ObjectRow name="소파" status="On" />
-                <ObjectRow name="화분" status="On" />
-                <ObjectRow name="테이블" status="Off" />
-              </View>
+              {autoZones.length > 0 ? (
+                <View className="bg-white rounded-3xl p-2 border border-gray-100">
+                  {autoZones.map((zone) => (
+                    <ObjectRow
+                      key={zone.id}
+                      name={zone.className}
+                      status={zone.isActive ? "On" : "Off"}
+                      onToggle={() =>
+                        handleToggleAutoZone(zone.id, zone.isActive)
+                      }
+                    />
+                  ))}
+                </View>
+              ) : (
+                <View className="bg-white rounded-3xl p-8 border border-gray-100 items-center">
+                  <Text className="text-gray-400">
+                    인식된 자동 구역이 없습니다.
+                  </Text>
+                </View>
+              )}
               <Text className="text-gray-400 text-xs mt-4 px-2 leading-5">
-                카메라가 자동으로 인식한 객체입니다.{"\n"}인식할 객체를
-                켜주세요.
+                카메라가 자동으로 인식한 객체입니다.{"\n"}줄을 누르면 해당 객체
+                인식을 켜고 끌 수 있습니다.
               </Text>
             </View>
           ) : (
-            //  수동 설정 리스트
+            // 수동 설정 리스트
             <View className="mt-6">
               <TouchableOpacity
                 onPress={() => setIsModalVisible(true)}
@@ -162,14 +298,38 @@ export default function AreaSettingScreen() {
   );
 }
 
-function ObjectRow({ name, status }: { name: string; status: string }) {
+function ObjectRow({
+  name,
+  status,
+  onToggle,
+}: {
+  name: string;
+  status: string;
+  onToggle?: () => void;
+}) {
+  const isOn = status === "On";
+
   return (
-    <View className="flex-row items-center justify-between p-5 border-b border-gray-50 last:border-0">
-      <Text className="text-[17px] font-medium text-gray-800">{name}</Text>
+    <TouchableOpacity
+      onPress={onToggle}
+      disabled={!onToggle}
+      className="flex-row items-center justify-between p-5 border-b border-gray-50 last:border-0"
+    >
+      <Text
+        className={`text-[17px] font-medium ${isOn ? "text-gray-800" : "text-gray-400"}`}
+      >
+        {name}
+      </Text>
+
       <View className="flex-row items-center">
-        <Text className="text-blue-500 mr-2">{status}</Text>
-        <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+        <Switch
+          trackColor={{ false: "#E5E7EB", true: "#C7C9FB" }}
+          thumbColor={isOn ? "#5D60F1" : "#9CA3AF"}
+          ios_backgroundColor="#E5E7EB"
+          value={isOn}
+          onValueChange={onToggle}
+        />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
