@@ -173,7 +173,15 @@ export default function RecordScreen() {
                               : ""
                           }`}
                           onPress={() =>
-                            router.push(`/record-detail/${item.id}` as any)
+                            router.push({
+                              pathname: `/record-detail/${item.id}`,
+                              params: {
+                                fromSubList: "false",
+                                title: "최근 기록",
+                                filterType: "시간순",
+                                serverRecords: JSON.stringify(records),
+                              },
+                            } as any)
                           }
                         >
                           <View className="flex-1">

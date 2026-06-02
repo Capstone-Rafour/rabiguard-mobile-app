@@ -1,11 +1,47 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { db } from "../lib/firebase";
 import ScreenContainer from "./screen-container";
 
 export default function ConnectedHomeScreen() {
   const router = useRouter();
+
+  const [eventCount, setEventCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const {
+      collectionGroup,
+      query,
+      where,
+      onSnapshot,
+    } = require("firebase/firestore");
+
+    const eventsRef = collectionGroup(db, "events");
+    const q = query(eventsRef, where("created_at", ">=", twentyFourHoursAgo));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot: any) => {
+        setEventCount(snapshot.size);
+        setIsLoading(false);
+      },
+      (error: any) => {
+        console.error("메인 이벤트 카운트 로드 실패:", error);
+        setIsLoading(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <ScreenContainer>
@@ -63,11 +99,25 @@ export default function ConnectedHomeScreen() {
             <Text className="text-xl font-bold text-gray-800">이벤트 횟수</Text>
 
             <View className="flex-row items-baseline mt-3">
-              <Text className="text-5xl font-extrabold text-[#FF6B6B]">5</Text>
-              <Text className="text-lg font-bold text-gray-500 ml-1">회</Text>
+              {isLoading ? (
+                // 데이터를 가져오는 중일 때 띄워줄 작은 로딩 서클
+                <ActivityIndicator
+                  size="small"
+                  color="#FF6B6B"
+                  className="py-2"
+                />
+              ) : (
+                <>
+                  <Text className="text-5xl font-extrabold text-[#FF6B6B]">
+                    {eventCount}
+                  </Text>
+                  <Text className="text-lg font-bold text-gray-500 ml-1">
+                    회
+                  </Text>
+                </>
+              )}
             </View>
           </View>
-
           <View className="w-16 h-16 bg-[#FFF0F0] rounded-2xl justify-center items-center">
             <Ionicons name="alert-circle" size={32} color="#FF6B6B" />
           </View>
