@@ -1,6 +1,7 @@
 import ScreenContainer from "@/components/screen-container";
 import { Ionicons } from "@expo/vector-icons";
 import database from "@react-native-firebase/database";
+import firestore from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
@@ -19,10 +20,34 @@ export default function StreamingScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   const startWebRTC = async () => {
-    const pc = pcRef.current as any;
-    if (!pc) return;
 
-    // 원격 영상 수신 시
+    // stream_status가 ready가 될 때까지 대기
+    await new Promise<void>((resolve) => {
+      console.log("stream_status 감시 시작");
+      database()
+        .ref("signaling/smart_cctv/stream_status")
+        .on("value", (snapshot: any) => {
+          const val = snapshot.val();
+          console.log("stream_status 값:", val);
+          if (val === "ready") {
+            database().ref("signaling/smart_cctv/stream_status").off();
+            resolve();
+          }
+        });
+    });
+
+    // 기존 signaling 데이터 초기화
+    await database().ref("signaling/smart_cctv/offer").remove();
+    await database().ref("signaling/smart_cctv/answer").remove();
+    
+    console.log("startWebRTC 시작");
+    const pc = pcRef.current as any;
+    if (!pc) {
+      console.log("pc가 null임");
+      return;
+    }
+    console.log("pc 초기화 완료");
+
     pc.ontrack = (event: any) => {
       if (event.streams && event.streams[0]) {
         setRemoteStream(event.streams[0]);
@@ -31,25 +56,18 @@ export default function StreamingScreen() {
       }
     };
 
-    // ICE candidate 처리
-    pc.onicecandidate = (event: any) => {
-      // STUN 서버 처리 (자동)
-    };
+    pc.onicecandidate = (event: any) => {};
 
-    // 영상 수신 트랜시버 추가
     pc.addTransceiver("video", { direction: "recvonly" });
 
-    // offer 생성
     const offer = await pc.createOffer({});
     await pc.setLocalDescription(offer);
 
-    // Firebase에 offer 업로드
     await database().ref("signaling/smart_cctv/offer").set({
       sdp: offer.sdp,
       type: offer.type,
     });
 
-    // 라즈베리파이 answer 대기
     database()
       .ref("signaling/smart_cctv/answer")
       .on("value", async (snapshot) => {
@@ -60,13 +78,29 @@ export default function StreamingScreen() {
       });
   };
 
+  const handleBack = async () => {
+    try {
+      await firestore().collection("commands").add({
+        type: "stop_stream",
+        created_at: firestore.FieldValue.serverTimestamp(),
+      });
+      console.log("stop_stream 명령 전송 완료");
+    } catch (e) {
+      console.warn("stop_stream 명령 전송 실패:", e);
+    }
+    router.back();
+  };
+
   useEffect(() => {
     pcRef.current = new RTCPeerConnection({
       iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
     });
     startWebRTC();
     return () => {
+      database().ref("signaling/smart_cctv/answer").off();
+      database().ref("signaling/smart_cctv").remove();
       pcRef.current?.close();
+      pcRef.current = null;
     };
   }, []);
 
@@ -76,7 +110,7 @@ export default function StreamingScreen() {
         {/* 헤더 영역*/}
         <View className="flex-row items-center justify-between mb-8">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="w-10 h-10 justify-center"
           >
             <Ionicons name="chevron-back" size={28} color="black" />
