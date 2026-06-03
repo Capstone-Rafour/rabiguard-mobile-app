@@ -94,6 +94,8 @@ export default function AreaSettingScreen() {
       setIsLoading(false);
     });
 
+    captureAndReceiveImage();
+
     return () => {
       unsubscribeAuto();
       unsubscribeManual();
