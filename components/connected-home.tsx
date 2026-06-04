@@ -68,7 +68,7 @@ export default function ConnectedHomeScreen() {
         </View>
 
         {/* 연결된 카메라 상태 카드 */}
-        <View className="bg-white rounded-3xl p-6 shadow-sm mb-4 flex-row items-center justify-between">
+        {/* <View className="bg-white rounded-3xl p-6 shadow-sm mb-4 flex-row items-center justify-between">
           <View className="flex-row items-center flex-1 mr-2">
             <View className="w-14 h-14 bg-green-50 rounded-2xl justify-center items-center">
               <Ionicons name="videocam" size={24} color="#22C55E" />
@@ -90,7 +90,7 @@ export default function ConnectedHomeScreen() {
               <Text className="text-green-700 text-xs font-bold">연결됨</Text>
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* 24시간 이벤트 요약 카드 */}
         <View className="bg-white rounded-3xl p-6 shadow-sm mb-4 flex-row items-center justify-between">

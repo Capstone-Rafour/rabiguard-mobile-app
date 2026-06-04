@@ -94,8 +94,6 @@ export default function AreaSettingScreen() {
       setIsLoading(false);
     });
 
-    captureAndReceiveImage();
-
     return () => {
       unsubscribeAuto();
       unsubscribeManual();
@@ -214,7 +212,16 @@ export default function AreaSettingScreen() {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
       }
     });
-};
+  };
+
+  const handleRequestImage = async () => {
+    setIsLoading(true);
+    try {
+      await captureAndReceiveImage();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 🛠️ 치트키: PanResponder 대신 View 자체의 네이티브 터치 이벤트 핸들러 사용
   const handleTouchStart = (evt: any) => {
@@ -459,26 +466,42 @@ export default function AreaSettingScreen() {
           {/* 하단 리스트 영역 */}
           <View className="mt-6">
             {mode === "auto" ? (
-              autoZones.length > 0 ? (
-                <View className="bg-white rounded-3xl p-2 border border-gray-100">
-                  {autoZones.map((zone) => (
-                    <ObjectRow
-                      key={zone.id}
-                      name={zone.className}
-                      status={zone.isActive ? "On" : "Off"}
-                      onToggle={() =>
-                        handleToggleZone("auto_zones", zone.id, zone.isActive)
-                      }
-                    />
-                  ))}
+              <View>
+                <View className="mb-4">
+                  <TouchableOpacity
+                    onPress={handleRequestImage}
+                    disabled={isLoading}
+                    className="bg-[#5D60F1] rounded-3xl px-4 py-4 items-center"
+                    style={isLoading ? { opacity: 0.7 } : {}}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <Text className="text-white font-bold">사진 요청</Text>
+                    )}
+                  </TouchableOpacity>
                 </View>
-              ) : (
-                <View className="bg-white rounded-3xl p-8 border border-gray-100 items-center">
-                  <Text className="text-gray-400">
-                    인식된 자동 구역이 없습니다.
-                  </Text>
-                </View>
-              )
+                {autoZones.length > 0 ? (
+                  <View className="bg-white rounded-3xl p-2 border border-gray-100">
+                    {autoZones.map((zone) => (
+                      <ObjectRow
+                        key={zone.id}
+                        name={zone.className}
+                        status={zone.isActive ? "On" : "Off"}
+                        onToggle={() =>
+                          handleToggleZone("auto_zones", zone.id, zone.isActive)
+                        }
+                      />
+                    ))}
+                  </View>
+                ) : (
+                  <View className="bg-white rounded-3xl p-8 border border-gray-100 items-center">
+                    <Text className="text-gray-400">
+                      인식된 자동 구역이 없습니다.
+                    </Text>
+                  </View>
+                )}
+              </View>
             ) : (
               <View>
                 <View className="bg-gray-50 border border-dashed border-gray-200 py-4 rounded-2xl items-center mb-4">
