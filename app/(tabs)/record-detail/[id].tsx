@@ -175,7 +175,11 @@ export default function RecordDetailScreen() {
             onPress={() =>
               router.push({
                 pathname: "/event-clip/[id]" as any,
-                params: { id: id },
+                params: {
+                  id: id,
+                  event_id: record?.event_id || "",
+                  korean_text: record?.description || "",
+                },
               })
             }
           >

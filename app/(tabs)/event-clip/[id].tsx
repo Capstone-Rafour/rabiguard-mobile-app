@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import database from "@react-native-firebase/database";
 import firestore from "@react-native-firebase/firestore";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -30,6 +30,8 @@ import {
   RTCView,
 } from "react-native-webrtc";
 
+const FileSystem = require("expo-file-system/legacy");
+
 export default function EventClipScreen() {
   const router = useRouter();
   const { korean_text, event_id } = useLocalSearchParams();
@@ -42,6 +44,11 @@ export default function EventClipScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isReceivingImage, setIsReceivingImage] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [autoSlide, setAutoSlide] = useState(true);
+  const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   // 핀치 줌용
   const scale = useSharedValue(1);
@@ -59,10 +66,26 @@ export default function EventClipScreen() {
       console.log("받은 event_id:", event_id);
   
       const init = async () => {
-        if (event_id) {
-          await requestImageDownload(event_id as string);
+        if (!event_id) return;
+      
+        // 캐시 확인
+        const cacheDir = `${FileSystem.cacheDirectory}events/${event_id}/`;
+        const cacheDirInfo = await FileSystem.getInfoAsync(cacheDir);
+      
+        if (cacheDirInfo.exists) {
+          // 캐시된 이미지 불러오기
+          console.log("캐시된 이미지 로드:", event_id);
+          const files = await FileSystem.readDirectoryAsync(cacheDir);
+          const sortedFiles = files.sort();
+          const cachedImages = sortedFiles.map((f: string) => `${cacheDir}${f}`);
+          setImageList(cachedImages);
+          setSelectedImage(cachedImages[0]);
+          return;
         }
-  
+      
+        // 캐시 없으면 다운로드
+        await requestImageDownload(event_id as string);
+      
         await new Promise<void>((resolve) => {
           database()
             .ref("signaling/smart_cctv/data_status")
@@ -73,8 +96,8 @@ export default function EventClipScreen() {
               }
             });
         });
-  
-        startDataConnection();
+      
+        startDataConnection(event_id as string);
       };
   
       init();
@@ -92,6 +115,23 @@ export default function EventClipScreen() {
     }, [event_id])
   );
 
+  useEffect(() => {
+    if (imageList.length <= 1 || !autoSlide) return;
+  
+    autoSlideRef.current = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const next = (prev + 1) % imageList.length;
+        setSelectedImage(imageList[next]);
+        flatListRef.current?.scrollToIndex({ index: next, animated: true });
+        return next;
+      });
+    }, 2000);
+  
+    return () => {
+      if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+    };
+  }, [imageList.length, autoSlide]);
+
   const requestImageDownload = async (eventId: string) => {
     try {
       console.log("download_event 명령 전송 시도:", eventId);
@@ -106,38 +146,44 @@ export default function EventClipScreen() {
     }
   };
 
-  const startDataConnection = async () => {
+  const startDataConnection = async (eventId: string) => {
     await database().ref("signaling/smart_cctv/data_offer").remove();
     await database().ref("signaling/smart_cctv/data_answer").remove();
     await database().ref("signaling/smart_cctv/data_status").remove();
-
+  
     setIsReceivingImage(true);
-
+  
+    const cacheDir = `${FileSystem.cacheDirectory}events/${eventId}/`;
+    await FileSystem.makeDirectoryAsync(cacheDir, { intermediates: true });
+  
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
     }) as any;
     pcRef.current = pc;
-
+  
     const dc = pc.createDataChannel("file-transfer");
     dc.binaryType = "arraybuffer";
-
-    dc.onmessage = (e: any) => {
+  
+    let currentFilename = "";
+  
+    dc.onmessage = async (e: any) => {
       const data = e.data;
-
+  
       if (typeof data === "string") {
         try {
           const msg = JSON.parse(data);
-
+  
           if (msg.type === "transfer_start") {
             totalFilesRef.current = msg.total_files;
             receivedFilesRef.current = 0;
             chunksRef.current = [];
             console.log(`파일 전송 시작: 총 ${msg.total_files}개`);
-
+  
           } else if (msg.type === "file_start") {
             chunksRef.current = [];
+            currentFilename = msg.filename;
             console.log(`파일 수신 시작: ${msg.filename}`);
-
+  
           } else if (msg.type === "file_end") {
             const totalLength = chunksRef.current.reduce(
               (acc, chunk) => acc + chunk.length, 0
@@ -149,23 +195,27 @@ export default function EventClipScreen() {
               offset += chunk.length;
             }
             const base64 = btoa(String.fromCharCode(...combined));
-            const uri = `data:image/jpeg;base64,${base64}`;
-
-            // 목록에 추가, 첫 번째 이미지는 자동 선택
+  
+            // 파일 저장
+            const filePath = `${cacheDir}${currentFilename}`;
+            await FileSystem.writeAsStringAsync(filePath, base64, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+  
             setImageList((prev) => {
-              const updated = [...prev, uri];
-              if (updated.length === 1) setSelectedImage(uri);
+              const updated = [...prev, filePath];
+              if (updated.length === 1) setSelectedImage(filePath);
               return updated;
             });
             chunksRef.current = [];
             receivedFilesRef.current += 1;
-            console.log(`파일 수신 완료: ${msg.filename}`);
-
+            console.log(`파일 저장 완료: ${filePath}`);
+  
           } else if (msg.type === "transfer_end") {
             setIsReceivingImage(false);
             console.log("모든 파일 전송 완료");
           }
-
+  
         } catch {
           // JSON 파싱 실패 무시
         }
@@ -173,15 +223,15 @@ export default function EventClipScreen() {
         chunksRef.current.push(new Uint8Array(data));
       }
     };
-
+  
     const offer = await pc.createOffer({});
     await pc.setLocalDescription(offer);
-
+  
     await database().ref("signaling/smart_cctv/data_offer").set({
       sdp: offer.sdp,
       type: offer.type,
     });
-
+  
     database()
       .ref("signaling/smart_cctv/data_answer")
       .on("value", async (snapshot: any) => {
@@ -278,16 +328,29 @@ export default function EventClipScreen() {
           {imageList.length > 0 && (
             <View className="mt-3">
               <FlatList
+                ref={flatListRef}
                 data={imageList}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(_, index) => index.toString()}
                 renderItem={({ item, index }) => (
                   <TouchableOpacity
-                    onPress={() => setSelectedImage(item)}
+                  onPress={() => {
+                    setSelectedImage(item);
+                    setCurrentIndex(index);
+                    if (autoSlideRef.current) clearInterval(autoSlideRef.current);
+                    autoSlideRef.current = setInterval(() => {
+                      setCurrentIndex((prev) => {
+                        const next = (prev + 1) % imageList.length;
+                        setSelectedImage(imageList[next]);
+                        flatListRef.current?.scrollToIndex({ index: next, animated: true });
+                        return next;
+                      });
+                    }, 2000);
+                  }}
                     className="mr-2"
                     style={{
-                      borderWidth: selectedImage === item ? 2 : 0,
+                      borderWidth: currentIndex === index ? 2 : 0,
                       borderColor: "#5D60F1",
                       borderRadius: 8,
                     }}
@@ -304,6 +367,23 @@ export default function EventClipScreen() {
                 )}
               />
             </View>
+          )}
+
+          {/* 자동 슬라이드 토글 */}
+          {imageList.length > 1 && (
+            <TouchableOpacity
+              onPress={() => setAutoSlide((prev) => !prev)}
+              className="flex-row items-center mt-2 self-end"
+            >
+              <Ionicons
+                name={autoSlide ? "pause-circle" : "play-circle"}
+                size={20}
+                color="#5D60F1"
+              />
+              <Text className="text-xs text-[#5D60F1] ml-1">
+                {autoSlide ? "자동 재생 중" : "자동 재생 멈춤"}
+              </Text>
+            </TouchableOpacity>
           )}
 
           {/* 수신 중 표시 */}
