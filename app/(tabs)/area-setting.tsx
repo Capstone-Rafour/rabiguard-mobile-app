@@ -1,4 +1,5 @@
 import AddAreaModal from "@/components/add-area-modal";
+import AutoConditionModal from "@/components/auto-condition-modal";
 import ScreenContainer from "@/components/screen-container";
 import { db } from "@/lib/firebase";
 import { Ionicons } from "@expo/vector-icons";
@@ -47,6 +48,9 @@ export default function AreaSettingScreen() {
 
   const [mode, setMode] = useState<"auto" | "manual">("auto");
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAutoModalVisible, setIsAutoModalVisible] = useState(false);
+  const [autoMinPeople, setAutoMinPeople] = useState(1);
+  const [autoEnterThresholdSec, setAutoEnterThresholdSec] = useState(2);
 
   const [autoZones, setAutoZones] = useState<ZoneData[]>([]);
   const [manualZones, setManualZones] = useState<ZoneData[]>([]);
@@ -94,12 +98,18 @@ export default function AreaSettingScreen() {
       setIsLoading(false);
     });
 
+    // 화면 진입 시 기본 자동 구역 이미지 요청
+    captureAndReceiveImage({
+      min_people: autoMinPeople,
+      enter_threshold_sec: autoEnterThresholdSec,
+    });
+
     return () => {
       unsubscribeAuto();
       unsubscribeManual();
     };
 
-  }, [screenWidth]);
+  }, [screenWidth, autoMinPeople, autoEnterThresholdSec]);
 
   const parseSnapshot = (snapshot: any): ZoneData[] => {
     return snapshot.docs.map((docSnap: any) => {
@@ -128,11 +138,18 @@ export default function AreaSettingScreen() {
     });
   };
 
-  const captureAndReceiveImage = async () => {
+  const captureAndReceiveImage = async (options?: {
+    min_people?: number;
+    enter_threshold_sec?: number;
+  }) => {
     try {
       await firestore().collection("commands").add({
         type: "trigger_roi",
         created_at: firestore.FieldValue.serverTimestamp(),
+        ...(options?.min_people !== undefined && { min_people: options.min_people }),
+        ...(options?.enter_threshold_sec !== undefined && {
+          enter_threshold_sec: options.enter_threshold_sec,
+        }),
       });
   
       await new Promise<void>((resolve) => {
@@ -214,13 +231,29 @@ export default function AreaSettingScreen() {
     });
   };
 
-  const handleRequestImage = async () => {
+  const openAutoConditionModal = () => {
+    setIsAutoModalVisible(true);
+  };
+
+  const handleRequestImageDirect = async () => {
     setIsLoading(true);
     try {
-      await captureAndReceiveImage();
+      await captureAndReceiveImage({
+        min_people: autoMinPeople,
+        enter_threshold_sec: autoEnterThresholdSec,
+      });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSaveAutoCondition = (
+    minPeople: number,
+    enterThresholdSec: number,
+  ) => {
+    setAutoMinPeople(minPeople);
+    setAutoEnterThresholdSec(enterThresholdSec);
+    setIsAutoModalVisible(false);
   };
 
   // 🛠️ 치트키: PanResponder 대신 View 자체의 네이티브 터치 이벤트 핸들러 사용
@@ -467,9 +500,9 @@ export default function AreaSettingScreen() {
           <View className="mt-6">
             {mode === "auto" ? (
               <View>
-                <View className="mb-4">
+                <View className="mb-6 space-y-6">
                   <TouchableOpacity
-                    onPress={handleRequestImage}
+                    onPress={handleRequestImageDirect}
                     disabled={isLoading}
                     className="bg-[#5D60F1] rounded-3xl px-4 py-4 items-center"
                     style={isLoading ? { opacity: 0.7 } : {}}
@@ -480,6 +513,23 @@ export default function AreaSettingScreen() {
                       <Text className="text-white font-bold">사진 요청</Text>
                     )}
                   </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={openAutoConditionModal}
+                    disabled={isLoading}
+                    className="bg-white border border-[#5D60F1] rounded-3xl px-4 py-4 mt-2 items-center"
+                    style={isLoading ? { opacity: 0.7 } : {}}
+                  >
+                    <Text className="text-[#5D60F1] font-bold">
+                      상세 조건 설정
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View className="rounded-3xl border border-gray-200 bg-gray-50 px-4 py-3 mb-2">
+                  <Text className="text-sm text-gray-500">현재 조건</Text>
+                  <Text className="text-base font-medium text-gray-800">
+                    최소 인원 {autoMinPeople}명 · 체류 시간 {autoEnterThresholdSec}초
+                  </Text>
                 </View>
                 {autoZones.length > 0 ? (
                   <View className="bg-white rounded-3xl p-2 border border-gray-100">
@@ -542,6 +592,12 @@ export default function AreaSettingScreen() {
           currentDragBoxRef.current = null;
         }}
         onSave={handleSaveManualArea}
+      />
+
+      <AutoConditionModal
+        isVisible={isAutoModalVisible}
+        onClose={() => setIsAutoModalVisible(false)}
+        onSave={handleSaveAutoCondition}
       />
     </ScreenContainer>
   );
