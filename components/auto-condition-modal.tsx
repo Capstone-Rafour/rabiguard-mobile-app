@@ -12,19 +12,30 @@ import {
   View,
 } from "react-native";
 
+interface ZoneOption {
+  id: string;
+  name: string;
+}
+
 interface AutoConditionModalProps {
   isVisible: boolean;
   onClose: () => void;
-  onSave: (minPeople: number, enterThresholdSec: number) => void;
+  zones?: ZoneOption[];
+  onSave: (zoneId: string | null, minPeople: number, enterThresholdSec: number) => void;
 }
 
 export default function AutoConditionModal({
   isVisible,
   onClose,
+  zones = [],
   onSave,
 }: AutoConditionModalProps) {
   const [minPeople, setMinPeople] = useState("1");
   const [enterThreshold, setEnterThreshold] = useState("2");
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(
+    zones.length ? zones[0].id : null,
+  );
+  const [openDropdown, setOpenDropdown] = useState(false);
 
   useEffect(() => {
     if (isVisible) {
@@ -32,6 +43,13 @@ export default function AutoConditionModal({
       setEnterThreshold("2");
     }
   }, [isVisible]);
+
+  useEffect(() => {
+    if (isVisible) {
+      setSelectedZoneId(zones.length ? zones[0].id : null);
+      setOpenDropdown(false);
+    }
+  }, [isVisible, zones]);
 
   const handleSave = () => {
     const people = Number(minPeople);
@@ -47,7 +65,9 @@ export default function AutoConditionModal({
       return;
     }
 
-    onSave(people, threshold);
+    onSave(selectedZoneId, people, threshold);
+    setMinPeople("1");
+    setEnterThreshold("2");
   };
 
   const handleClose = () => {
@@ -76,7 +96,7 @@ export default function AutoConditionModal({
                   <Ionicons name="close" size={20} color="black" />
                 </TouchableOpacity>
 
-                <Text className="text-lg font-bold">자동 조건 설정</Text>
+                <Text className="text-lg font-bold">상세 조건 설정</Text>
 
                 <TouchableOpacity
                   onPress={handleSave}
@@ -86,33 +106,70 @@ export default function AutoConditionModal({
                 </TouchableOpacity>
               </View>
 
-              <View className="bg-gray-50 border border-gray-100 rounded-3xl px-6 py-4 space-y-4">
+              {zones.length > 0 && (
+                <View className="mb-4">
+                  <Text className="text-sm text-gray-500 mb-2">구역 선택</Text>
+                  <View className="bg-white rounded-2xl px-4 py-3 border border-gray-200">
+                    <TouchableOpacity
+                      onPress={() => setOpenDropdown((v) => !v)}
+                      className="flex-row items-center justify-between"
+                    >
+                      <Text className="text-lg font-medium text-gray-800">
+                        {zones.find((z) => z.id === selectedZoneId)?.name || "구역 선택"}
+                      </Text>
+                      <Ionicons
+                        name={openDropdown ? "chevron-up" : "chevron-down"}
+                        size={20}
+                        color="#6B7280"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  {openDropdown && (
+                    <View className="bg-white border border-gray-200 rounded-2xl mt-2 max-h-40">
+                      {zones.map((z) => (
+                        <TouchableOpacity
+                          key={z.id}
+                          onPress={() => {
+                            setSelectedZoneId(z.id);
+                            setOpenDropdown(false);
+                          }}
+                          className="px-4 py-3 border-b border-gray-100"
+                        >
+                          <Text className="text-base">{z.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
+
+              <View className="space-y-4">
                 <View>
-                  <Text className="text-sm text-gray-500 mb-2">
-                    최소 인원
-                  </Text>
-                  <TextInput
-                    value={minPeople}
-                    onChangeText={setMinPeople}
-                    placeholder="예: 1"
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType="number-pad"
-                    className="text-lg font-medium text-gray-800 bg-white rounded-2xl px-4 py-3 border border-gray-200"
-                  />
+                  <Text className="text-sm text-gray-500 mb-2">최소 인원</Text>
+                  <View className="bg-white rounded-2xl px-4 border border-gray-200">
+                    <TextInput
+                      value={minPeople}
+                      onChangeText={setMinPeople}
+                      placeholder="예: 1"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="number-pad"
+                      className="text-lg font-medium text-gray-800"
+                    />
+                  </View>
                 </View>
 
                 <View>
-                  <Text className="text-sm text-gray-500 mb-2">
-                    체류 시간 (초)
-                  </Text>
-                  <TextInput
-                    value={enterThreshold}
-                    onChangeText={setEnterThreshold}
-                    placeholder="예: 2"
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType="decimal-pad"
-                    className="text-lg font-medium text-gray-800 bg-white rounded-2xl px-4 py-3 border border-gray-200"
-                  />
+                  <Text className="text-sm text-gray-500 mb-2">체류 시간 (초)</Text>
+                  <View className="bg-white rounded-2xl px-4 border border-gray-200">
+                    <TextInput
+                      value={enterThreshold}
+                      onChangeText={setEnterThreshold}
+                      placeholder="예: 2"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="decimal-pad"
+                      className="text-lg font-medium text-gray-800"
+                    />
+                  </View>
                 </View>
               </View>
             </View>

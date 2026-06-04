@@ -51,6 +51,9 @@ export default function AreaSettingScreen() {
   const [isAutoModalVisible, setIsAutoModalVisible] = useState(false);
   const [autoMinPeople, setAutoMinPeople] = useState(1);
   const [autoEnterThresholdSec, setAutoEnterThresholdSec] = useState(2);
+  const [isManualModalVisible, setIsManualModalVisible] = useState(false);
+  const [manualMinPeople, setManualMinPeople] = useState(1);
+  const [manualEnterThresholdSec, setManualEnterThresholdSec] = useState(2);
 
   const [autoZones, setAutoZones] = useState<ZoneData[]>([]);
   const [manualZones, setManualZones] = useState<ZoneData[]>([]);
@@ -248,12 +251,60 @@ export default function AreaSettingScreen() {
   };
 
   const handleSaveAutoCondition = (
+    zoneId: string | null,
     minPeople: number,
     enterThresholdSec: number,
   ) => {
-    setAutoMinPeople(minPeople);
-    setAutoEnterThresholdSec(enterThresholdSec);
     setIsAutoModalVisible(false);
+
+    // if a specific zone selected, update its document
+    if (zoneId) {
+      (async () => {
+        setIsLoading(true);
+        try {
+          const zoneDocRef = doc(db, "auto_zones", zoneId);
+          await updateDoc(zoneDocRef, {
+            enter_threshold_sec: enterThresholdSec,
+            min_people: minPeople,
+          });
+        } catch (e) {
+          console.error("자동 조건 저장 실패:", e);
+        } finally {
+          setIsLoading(false);
+        }
+      })();
+    } else {
+      setAutoMinPeople(minPeople);
+      setAutoEnterThresholdSec(enterThresholdSec);
+    }
+  };
+
+  const handleSaveManualCondition = (
+    zoneId: string | null,
+    minPeople: number,
+    enterThresholdSec: number,
+  ) => {
+    setIsManualModalVisible(false);
+
+    if (zoneId) {
+      (async () => {
+        setIsLoading(true);
+        try {
+          const zoneDocRef = doc(db, "manual_zones", zoneId);
+          await updateDoc(zoneDocRef, {
+            enter_threshold_sec: enterThresholdSec,
+            min_people: minPeople,
+          });
+        } catch (e) {
+          console.error("수동 조건 저장 실패:", e);
+        } finally {
+          setIsLoading(false);
+        }
+      })();
+    } else {
+      setManualMinPeople(minPeople);
+      setManualEnterThresholdSec(enterThresholdSec);
+    }
   };
 
   // 🛠️ 치트키: PanResponder 대신 View 자체의 네이티브 터치 이벤트 핸들러 사용
@@ -373,6 +424,7 @@ export default function AreaSettingScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           scrollEnabled={!isDragging}
+          contentContainerStyle={{ paddingBottom: 140 }}
         >
           {/* 카메라 뷰 및 드래그 영역 */}
           <View
@@ -525,12 +577,12 @@ export default function AreaSettingScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
-                <View className="rounded-3xl border border-gray-200 bg-gray-50 px-4 py-3 mb-2">
+                {/* <View className="rounded-3xl border border-gray-200 bg-gray-50 px-4 py-3 mb-4">
                   <Text className="text-sm text-gray-500">현재 조건</Text>
                   <Text className="text-base font-medium text-gray-800">
                     최소 인원 {autoMinPeople}명 · 체류 시간 {autoEnterThresholdSec}초
                   </Text>
-                </View>
+                </View> */}
                 {autoZones.length > 0 ? (
                   <View className="bg-white rounded-3xl p-2 border border-gray-100">
                     {autoZones.map((zone) => (
@@ -559,6 +611,47 @@ export default function AreaSettingScreen() {
                     카메라 영상 위를 드래그하면 구역이 추가됩니다.
                   </Text>
                 </View>
+
+                <View className="mb-6 space-y-6">
+                  <TouchableOpacity
+                    onPress={async () => {
+                      setIsLoading(true);
+                      try {
+                        await captureAndReceiveImage({
+                          min_people: manualMinPeople,
+                          enter_threshold_sec: manualEnterThresholdSec,
+                        });
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    disabled={isLoading}
+                    className="bg-[#5D60F1] rounded-3xl px-4 py-4 items-center"
+                    style={isLoading ? { opacity: 0.7 } : {}}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <Text className="text-white font-bold">사진 요청</Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => setIsManualModalVisible(true)}
+                    disabled={isLoading}
+                    className="bg-white border border-[#5D60F1] rounded-3xl px-4 py-4 mt-2 items-center"
+                    style={isLoading ? { opacity: 0.7 } : {}}
+                  >
+                    <Text className="text-[#5D60F1] font-bold">상세 조건 설정</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* <View className="rounded-3xl border border-gray-200 bg-gray-50 px-4 py-3 mb-4">
+                  <Text className="text-sm text-gray-500">현재 조건</Text>
+                  <Text className="text-base font-medium text-gray-800">
+                    최소 인원 {manualMinPeople}명 · 체류 시간 {manualEnterThresholdSec}초
+                  </Text>
+                </View> */}
 
                 {manualZones.length > 0 && (
                   <View className="bg-white rounded-3xl p-2 border border-gray-100">
@@ -597,7 +690,14 @@ export default function AreaSettingScreen() {
       <AutoConditionModal
         isVisible={isAutoModalVisible}
         onClose={() => setIsAutoModalVisible(false)}
+        zones={autoZones.map((z) => ({ id: z.id, name: z.className }))}
         onSave={handleSaveAutoCondition}
+      />
+      <AutoConditionModal
+        isVisible={isManualModalVisible}
+        onClose={() => setIsManualModalVisible(false)}
+        zones={manualZones.map((z) => ({ id: z.id, name: z.className }))}
+        onSave={handleSaveManualCondition}
       />
     </ScreenContainer>
   );
