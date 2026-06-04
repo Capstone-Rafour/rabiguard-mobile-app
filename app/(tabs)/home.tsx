@@ -39,12 +39,15 @@ export default function HomeScreen() {
 
   return (
     <>
-      {isConnected ? (
+    <ConnectedHomeScreen />
+
+    
+      {/* {isConnected ? (
         <ConnectedHomeScreen />
       ) : (
         <ScreenContainer>
           <View className="flex-1 px-6">
-            {/* 상단 헤더 영역 */}
+            
             <View className="flex-row justify-between items-center py-4 mb-8">
               <Text className="text-3xl font-bold">홈</Text>
               <TouchableOpacity
@@ -55,7 +58,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* 콘텐츠 영역 */}
+            
             <View className="flex-1 justify-center items-center mb-20">
               <TouchableOpacity
                 className="bg-[#5D60F1] px-10 py-4 rounded-full shadow-lg"
@@ -69,7 +72,7 @@ export default function HomeScreen() {
             </View>
           </View>
         </ScreenContainer>
-      )}
+      )} */}
 
       <CameraListModal
         visible={isModalVisible}
