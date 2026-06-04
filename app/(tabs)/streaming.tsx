@@ -3,10 +3,10 @@ import { Ionicons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import database from "@react-native-firebase/database";
 import firestore from "@react-native-firebase/firestore";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -70,10 +70,6 @@ export default function StreamingScreen() {
           }
         });
     });
-
-    // 기존 signaling 데이터 초기화
-    await database().ref("signaling/smart_cctv/offer").remove();
-    await database().ref("signaling/smart_cctv/answer").remove();
     
     console.log("startWebRTC 시작");
     const pc = pcRef.current as any;
@@ -126,18 +122,24 @@ export default function StreamingScreen() {
     router.back();
   };
 
-  useEffect(() => {
-    pcRef.current = new RTCPeerConnection({
-      iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
-    });
-    startWebRTC();
-    return () => {
-      database().ref("signaling/smart_cctv/answer").off();
-      database().ref("signaling/smart_cctv").remove();
-      pcRef.current?.close();
-      pcRef.current = null;
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      pcRef.current = new RTCPeerConnection({
+        iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
+      });
+      startWebRTC();
+      return () => {
+        database().ref("signaling/smart_cctv/answer").off();
+        database().ref("signaling/smart_cctv/stream_status").off();
+        database().ref("signaling/smart_cctv").remove();
+        pcRef.current?.close();
+        pcRef.current = null;
+        setRemoteStream(null);
+        setIsConnected(false);
+        setIsLoading(true);
+      };
+    }, [])
+  );
 
   const renderVideoPlayer = () => {
     return (
