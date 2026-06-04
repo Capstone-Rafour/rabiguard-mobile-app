@@ -83,6 +83,7 @@ export default function RecordScreen() {
               person_depth: data.person_depth,
               image_path: data.image_path,
               english_text: data.english_text,
+              event_id: data.event_id || doc.id,
             } as any;
           });
 
@@ -198,12 +199,11 @@ export default function RecordScreen() {
                           }`}
                           onPress={() =>
                             router.push({
-                              pathname: `/record-detail/${item.id}`,
+                              pathname: "/(tabs)/event-clip/[id]",
                               params: {
-                                fromSubList: "false",
-                                title: "최근 기록",
-                                filterType: "시간순",
-                                serverRecords: JSON.stringify(records),
+                                id: item.id,
+                                event_id: (item as any).event_id || "",
+                                korean_text: item.description || "",
                               },
                             } as any)
                           }
