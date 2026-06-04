@@ -4,6 +4,7 @@ export interface RecordItem {
   description: string;
   timestamp: string;
   eventType: string;
+  className?: string;
   stayTime?: string;
   peopleCount?: string;
   outfit?: string;

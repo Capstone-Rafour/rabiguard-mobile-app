@@ -14,7 +14,7 @@ import { RecordItem } from "../../constants/data";
 import { db } from "../../lib/firebase";
 
 // 필터 타입 정의
-type FilterType = "시간순" | "이벤트" | "구역";
+type FilterType = "시간순" | "이벤트" | "구역"; // "이벤트"는 현재 필터선택 UI에서 제외됨
 
 // 그룹 데이터 타입 정의
 interface GroupedData {
@@ -37,23 +37,46 @@ export default function RecordScreen() {
         try {
           setLoading(true);
 
+          // auto_zones 데이터 전체 로드 (캐싱)
+          const autoZonesSnapshot = await db.collection("auto_zones").get();
+          const autoZonesMap = new Map();
+          
+          autoZonesSnapshot.docs.forEach((doc) => {
+            const data = doc.data();
+            // zone_id나 문서 ID로 매칭하기 위해 여러 키로 저장
+            autoZonesMap.set(doc.id, data.class_name); // 문서 ID로 매칭
+            if (data.zone_id) {
+              autoZonesMap.set(data.zone_id, data.class_name); // zone_id 필드로도 매칭
+            }
+          });
+          
+          console.log("📦 Auto zones 로드됨:", autoZonesMap.size);
+
           const snapshot = await db
             .collectionGroup("events")
             .orderBy("created_at", "desc")
             .get();
 
-          // const snapshot = await db.collectionGroup("events").get();
+          console.log("✅ Events 총 개수:", snapshot.docs.length);
 
+          // zone_id를 바탕으로 auto_zones에서 class_name 조회
           const fetchedData: RecordItem[] = snapshot.docs.map((doc) => {
             const data = doc.data();
-            const zoneId =
-              doc.ref.parent.parent?.id || data.zone_id || "알 수 없는 구역";
+            const zoneId = data.zone_id || "알 수 없는 구역";
+
+            // 메모리에서 class_name 찾기
+            let zoneName = autoZonesMap.get(zoneId) || zoneId;
+            
+            if (zoneName !== zoneId) {
+              console.log("✅ class_name 찾음:", zoneId, "=>", zoneName);
+            }
 
             return {
               id: doc.id,
-              location: zoneId,
+              location: zoneName,
               description: data.korean_text || "감지된 내용이 없습니다.",
               eventType: "사람 감지",
+              className: data.class_name || "알 수 없는 객체",
 
               // 디테일 화면용 원본 필드 데이터 토스
               created_at: data.created_at,
@@ -63,6 +86,7 @@ export default function RecordScreen() {
             } as any;
           });
 
+          console.log("📊 최종 records:", fetchedData.slice(0, 3));
           setRecords(fetchedData);
           setLoading(false);
         } catch (e) {

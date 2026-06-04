@@ -13,10 +13,12 @@ import {
   onSnapshot,
   serverTimestamp,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   Switch,
@@ -371,6 +373,29 @@ export default function AreaSettingScreen() {
     }
   };
 
+  const handleDeleteZone = (
+    collectionName: "auto_zones" | "manual_zones",
+    id: string,
+  ) => {
+    Alert.alert("구역 삭제", "정말로 이 구역을 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          setIsLoading(true);
+          try {
+            await deleteDoc(doc(db, collectionName, id));
+          } catch (e) {
+            console.error("구역 삭제 실패:", e);
+          } finally {
+            setIsLoading(false);
+          }
+        },
+      },
+    ]);
+  };
+
   const handleSaveManualArea = async (name: string) => {
     const finalBox = currentDragBoxRef.current;
     if (!finalBox) return;
@@ -667,6 +692,7 @@ export default function AreaSettingScreen() {
                             zone.isActive,
                           )
                         }
+                        onDelete={() => handleDeleteZone("manual_zones", zone.id)}
                       />
                     ))}
                   </View>
@@ -707,10 +733,12 @@ function ObjectRow({
   name,
   status,
   onToggle,
+  onDelete,
 }: {
   name: string;
   status: string;
   onToggle?: () => void;
+  onDelete?: () => void;
 }) {
   const isOn = status === "On";
 
@@ -733,6 +761,11 @@ function ObjectRow({
           value={isOn}
           onValueChange={onToggle}
         />
+        {onDelete && (
+          <TouchableOpacity onPress={onDelete} className="ml-4 p-2">
+            <Ionicons name="trash" size={18} color="#EF4444" />
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );

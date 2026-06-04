@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context"; // 추가
 
-type FilterType = "시간순" | "이벤트" | "구역";
+type FilterType = "시간순" | "이벤트" | "구역"; // "이벤트" 필터는 현재 UI에서 제거됨
 
 interface FilterModalProps {
   isVisible: boolean;
@@ -23,7 +23,11 @@ export default function FilterModal({
   currentFilter,
   onSelectFilter,
 }: FilterModalProps) {
-  const filters: FilterType[] = ["시간순", "이벤트", "구역"];
+  const filters: FilterType[] = [
+    "시간순",
+    // "이벤트",
+    "구역",
+  ];
   const insets = useSafeAreaInsets();
 
   return (

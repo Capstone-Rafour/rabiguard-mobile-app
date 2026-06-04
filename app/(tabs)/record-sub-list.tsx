@@ -65,7 +65,7 @@ export default function RecordSubListScreen() {
               >
                 <View className="flex-1">
                   <Text className="text-[17px] font-bold text-gray-800 mb-1">
-                    {filterType === "구역" ? item.eventType : item.location}
+                    {filterType === "구역" ? item.className || item.eventType : item.location}
                   </Text>
                   <Text
                     className="text-[13px] text-gray-400 pr-4"
