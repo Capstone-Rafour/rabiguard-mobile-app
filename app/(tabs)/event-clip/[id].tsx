@@ -61,6 +61,29 @@ export default function EventClipScreen() {
   const totalFilesRef = useRef<number>(0);
   const receivedFilesRef = useRef<number>(0);
 
+  const uint8ArrayToBase64 = (bytes: Uint8Array) => {
+    const chunkSize = 0x8000;
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const slice = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, Array.from(slice));
+    }
+    return btoa(binary);
+  };
+
+  const normalizeLocalUri = (uri: string | null | undefined) => {
+    if (!uri) return "";
+    if (
+      uri.startsWith("file://") ||
+      uri.startsWith("http://") ||
+      uri.startsWith("https://") ||
+      uri.startsWith("data:")
+    ) {
+      return uri;
+    }
+    return `file://${uri}`;
+  };
+
   useFocusEffect(
     useCallback(() => {
       console.log("받은 event_id:", event_id);
@@ -77,15 +100,17 @@ export default function EventClipScreen() {
           console.log("캐시된 이미지 로드:", event_id);
           const files = await FileSystem.readDirectoryAsync(cacheDir);
           const sortedFiles = files.sort();
-          const cachedImages = sortedFiles.map((f: string) => `${cacheDir}${f}`);
+          const cachedImages = sortedFiles.map((f: string) => normalizeLocalUri(`${cacheDir}${f}`));
           setImageList(cachedImages);
-          setSelectedImage(cachedImages[0]);
+          if (cachedImages.length > 0) {
+            setSelectedImage(cachedImages[0]);
+          }
           return;
         }
-      
+
         // 캐시 없으면 다운로드
         await requestImageDownload(event_id as string);
-      
+
         await new Promise<void>((resolve) => {
           database()
             .ref("signaling/smart_cctv/data_status")
@@ -96,11 +121,12 @@ export default function EventClipScreen() {
               }
             });
         });
-      
+
         startDataConnection(event_id as string);
       };
-  
+
       init();
+
   
       return () => {
         database().ref("signaling/smart_cctv/data_answer").off();
@@ -194,17 +220,18 @@ export default function EventClipScreen() {
               combined.set(chunk, offset);
               offset += chunk.length;
             }
-            const base64 = btoa(String.fromCharCode(...combined));
-  
+            const base64 = uint8ArrayToBase64(combined);
+
             // 파일 저장
             const filePath = `${cacheDir}${currentFilename}`;
             await FileSystem.writeAsStringAsync(filePath, base64, {
               encoding: FileSystem.EncodingType.Base64,
             });
   
+            const normalizedPath = normalizeLocalUri(filePath);
             setImageList((prev) => {
-              const updated = [...prev, filePath];
-              if (updated.length === 1) setSelectedImage(filePath);
+              const updated = [...prev, normalizedPath];
+              if (updated.length === 1) setSelectedImage(normalizedPath);
               return updated;
             });
             chunksRef.current = [];
@@ -236,7 +263,7 @@ export default function EventClipScreen() {
       .ref("signaling/smart_cctv/data_answer")
       .on("value", async (snapshot: any) => {
         const answer = snapshot.val();
-        if (answer && answer.sdp && !pc.currentRemoteDescription) {
+        if (answer && answer.sdp && !pc.remoteDescription) {
           await pc.setRemoteDescription(new RTCSessionDescription(answer));
           console.log("data_answer 수신 완료");
         }
@@ -295,7 +322,7 @@ export default function EventClipScreen() {
                 />
               ) : selectedImage ? (
                 <Image
-                  source={{ uri: selectedImage }}
+                  source={{ uri: normalizeLocalUri(selectedImage) }}
                   style={{ width: "100%", height: "100%" }}
                   resizeMode="cover"
                 />
@@ -356,7 +383,7 @@ export default function EventClipScreen() {
                     }}
                   >
                     <Image
-                      source={{ uri: item }}
+                      source={{ uri: normalizeLocalUri(item) }}
                       style={{ width: 60, height: 60, borderRadius: 8 }}
                       resizeMode="cover"
                     />
@@ -439,7 +466,7 @@ export default function EventClipScreen() {
             <PinchGestureHandler onGestureEvent={onPinchEvent} onHandlerStateChange={onPinchEvent}>
               <Animated.View style={animatedStyle}>
                 <Image
-                  source={{ uri: selectedImage! }}
+                  source={{ uri: normalizeLocalUri(selectedImage!) }}
                   style={{ width: 350, height: 350 }}
                   resizeMode="contain"
                 />

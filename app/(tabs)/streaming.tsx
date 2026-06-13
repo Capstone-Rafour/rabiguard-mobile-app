@@ -27,6 +27,7 @@ export default function StreamingScreen() {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [signalingError, setSignalingError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // 전체화면 토글 함수
@@ -55,58 +56,144 @@ export default function StreamingScreen() {
   }, []);
 
   const startWebRTC = async () => {
-
-    // stream_status가 ready가 될 때까지 대기
-    await new Promise<void>((resolve) => {
-      console.log("stream_status 감시 시작");
-      database()
-        .ref("signaling/smart_cctv/stream_status")
-        .on("value", (snapshot: any) => {
-          const val = snapshot.val();
-          console.log("stream_status 값:", val);
-          if (val === "ready") {
-            database().ref("signaling/smart_cctv/stream_status").off();
-            resolve();
-          }
-        });
-    });
-    
-    console.log("startWebRTC 시작");
     const pc = pcRef.current as any;
     if (!pc) {
       console.log("pc가 null임");
       return;
     }
+
+    let remoteDescriptionSet = false;
+    let answerListener: any = null;
+
+    const statusRef = database().ref("signaling/smart_cctv/stream_status");
+    const statusSnapshot = await statusRef.once("value");
+    if (statusSnapshot.val() !== "ready") {
+      console.log("stream_status 감시 시작");
+      await new Promise<void>((resolve) => {
+        const statusCallback = (snapshot: any) => {
+          const val = snapshot.val();
+          console.log("stream_status 값:", val);
+          if (val === "ready") {
+            statusRef.off("value", statusCallback);
+            resolve();
+          }
+        };
+        statusRef.on("value", statusCallback);
+      });
+    } else {
+      console.log("stream_status 이미 ready 상태");
+    }
+
+    await database().ref("signaling/smart_cctv/offer").remove();
+    await database().ref("signaling/smart_cctv/answer").remove();
+
+    console.log("startWebRTC 시작");
     console.log("pc 초기화 완료");
 
     pc.ontrack = (event: any) => {
-      if (event.streams && event.streams[0]) {
-        setRemoteStream(event.streams[0]);
+      console.log("pc.ontrack", {
+        streams: event.streams?.length,
+        trackKind: event.track?.kind,
+        trackId: event.track?.id,
+      });
+
+      let stream = event.streams?.[0];
+      if (!stream && event.track) {
+        stream = new MediaStream();
+        stream.addTrack(event.track);
+      }
+
+      if (stream) {
+        setRemoteStream(stream);
         setIsConnected(true);
         setIsLoading(false);
       }
     };
 
-    pc.onicecandidate = (event: any) => {};
+    pc.onaddstream = (event: any) => {
+      console.log("pc.onaddstream", event.stream);
+      if (event.stream) {
+        setRemoteStream(event.stream);
+        setIsConnected(true);
+        setIsLoading(false);
+      }
+    };
+
+    let iceGatheringComplete: (() => void) | null = null;
+    const iceGatheringPromise = new Promise<void>((resolve) => {
+      iceGatheringComplete = resolve;
+    });
+
+    pc.onicecandidate = (event: any) => {
+      if (event?.candidate) {
+        console.log("ICE candidate generated", event.candidate);
+      } else {
+        console.log("ICE gathering complete");
+        iceGatheringComplete?.();
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log(
+        "ICE state",
+        pc.iceConnectionState,
+        pc.connectionState,
+        pc.signalingState,
+      );
+      if (pc.iceConnectionState === "failed") {
+        setIsConnected(false);
+        setIsLoading(false);
+        setSignalingError("ICE 연결에 실패했습니다. 뒤로 나갔다가 다시 시도해 주세요.");
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      console.log("connection state", pc.connectionState);
+    };
+
+    pc.onsignalingstatechange = () => {
+      console.log("signaling state", pc.signalingState);
+    };
 
     pc.addTransceiver("video", { direction: "recvonly" });
 
     const offer = await pc.createOffer({});
     await pc.setLocalDescription(offer);
 
+    console.log("local description set, waiting for ICE gathering to complete");
+    await iceGatheringPromise;
+    console.log("sending offer after ICE gather complete");
+
     await database().ref("signaling/smart_cctv/offer").set({
-      sdp: offer.sdp,
-      type: offer.type,
+      sdp: pc.localDescription?.sdp || offer.sdp,
+      type: pc.localDescription?.type || offer.type,
     });
 
-    database()
+    answerListener = database()
       .ref("signaling/smart_cctv/answer")
       .on("value", async (snapshot) => {
         const answer = snapshot.val();
-        if (answer && answer.sdp && !pc.currentRemoteDescription) {
-          await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        console.log("answer snapshot", answer);
+
+        if (answer && answer.sdp && !remoteDescriptionSet) {
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(answer));
+            console.log("remote description set");
+            remoteDescriptionSet = true;
+          } catch (error) {
+            console.warn("failed to set remote description", error);
+            setSignalingError("응답 SDP를 설정할 수 없습니다.");
+          }
         }
       });
+
+    setTimeout(() => {
+      if (!remoteDescriptionSet) {
+        console.warn("Answer 미수신: 연결 지연 중");
+        setSignalingError("응답을 기다리는 중입니다. 다시 시도해 주세요.");
+        setIsLoading(false);
+      }
+    }, 15000);
   };
 
   const handleBack = async () => {
@@ -221,6 +308,12 @@ export default function StreamingScreen() {
               </Text>
             </View>
           </View>
+
+          {signalingError ? (
+            <View className="bg-red-100 border border-red-200 p-4 rounded-2xl">
+              <Text className="text-red-700 font-semibold">{signalingError}</Text>
+            </View>
+          ) : null}
         </View>
       </View>
 

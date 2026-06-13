@@ -191,7 +191,7 @@ export default function RecordScreen() {
                     <View className="bg-white rounded-[32px] px-4 shadow-sm border border-gray-50">
                       {group.items.map((item, idx) => (
                         <TouchableOpacity
-                          key={item.id}
+                          key={`${item.id}-${idx}`}
                           className={`flex-row items-center justify-between py-5 ${
                             idx !== group.items.length - 1
                               ? "border-b border-gray-50"

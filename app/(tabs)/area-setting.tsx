@@ -27,6 +27,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+const FileSystem = require("expo-file-system/legacy");
 import {
   RTCPeerConnection,
   RTCSessionDescription,
@@ -69,9 +70,21 @@ export default function AreaSettingScreen() {
     width: number;
     height: number;
   } | null>(null);
+  const PERSISTED_CAMERA_IMAGE_PATH = `${FileSystem.documentDirectory}saved_camera_snapshot.jpg`;
   const [cameraImage, setCameraImage] = useState<string | null>(null);
+  const [savedImagePath, setSavedImagePath] = useState<string | null>(null);
   const chunksRef = useRef<Uint8Array[]>([]);
   const pcRef = useRef<any>(null);
+
+  const uint8ArrayToBase64 = (bytes: Uint8Array) => {
+    const chunkSize = 0x8000;
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const slice = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, Array.from(slice));
+    }
+    return btoa(binary);
+  };
 
   const startCoords = useRef({ x: 0, y: 0 });
   const currentDragBoxRef = useRef<{
@@ -103,18 +116,25 @@ export default function AreaSettingScreen() {
       setIsLoading(false);
     });
 
-    // 화면 진입 시 기본 자동 구역 이미지 요청
-    captureAndReceiveImage({
-      min_people: autoMinPeople,
-      enter_threshold_sec: autoEnterThresholdSec,
-    });
+    const loadSavedCameraImage = async () => {
+      try {
+        const info = await FileSystem.getInfoAsync(PERSISTED_CAMERA_IMAGE_PATH);
+        if (info.exists) {
+          setSavedImagePath(PERSISTED_CAMERA_IMAGE_PATH);
+        }
+      } catch (error) {
+        console.warn("Saved camera image load failed", error);
+      }
+    };
+
+    loadSavedCameraImage();
 
     return () => {
       unsubscribeAuto();
       unsubscribeManual();
     };
 
-  }, [screenWidth, autoMinPeople, autoEnterThresholdSec]);
+  }, [screenWidth]);
 
   const parseSnapshot = (snapshot: any): ZoneData[] => {
     return snapshot.docs.map((docSnap: any) => {
@@ -148,6 +168,8 @@ export default function AreaSettingScreen() {
     enter_threshold_sec?: number;
   }) => {
     try {
+      setCameraImage(null);
+      chunksRef.current = [];
       await firestore().collection("commands").add({
         type: "trigger_roi",
         created_at: firestore.FieldValue.serverTimestamp(),
@@ -168,37 +190,53 @@ export default function AreaSettingScreen() {
           });
       });
   
-      startImageConnection();
+      await startImageConnection();
     } catch (e) {
       console.warn("이미지 캡처 실패:", e);
     }
   };
 
   const startImageConnection = async () => {
-    await database().ref("signaling/smart_cctv/data_offer").remove();
-    await database().ref("signaling/smart_cctv/data_answer").remove();
-    await database().ref("signaling/smart_cctv/data_status").remove();
-  
+    const dataOfferRef = database().ref("signaling/smart_cctv/data_offer");
+    const dataAnswerRef = database().ref("signaling/smart_cctv/data_answer");
+
+    await dataOfferRef.remove();
+    await dataAnswerRef.remove();
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
     }) as any;
     pcRef.current = pc;
-  
+
     const dc = pc.createDataChannel("file-transfer");
     dc.binaryType = "arraybuffer";
-  
-    dc.onmessage = (e: any) => {
+
+    dc.onopen = () => {
+      console.log("Data channel opened");
+    };
+    dc.onclose = () => {
+      console.log("Data channel closed");
+    };
+    dc.onerror = (err: any) => {
+      console.warn("Data channel error", err);
+    };
+
+    dc.onmessage = async (e: any) => {
       const data = e.data;
-  
+      console.log("Data channel message", typeof data);
+
       if (typeof data === "string") {
         try {
           const msg = JSON.parse(data);
-  
+
           if (msg.type === "file_start") {
             chunksRef.current = [];
           } else if (msg.type === "file_end") {
             const totalLength = chunksRef.current.reduce(
-              (acc, chunk) => acc + chunk.length, 0
+              (acc, chunk) => acc + chunk.length,
+              0,
             );
             const combined = new Uint8Array(totalLength);
             let offset = 0;
@@ -206,32 +244,83 @@ export default function AreaSettingScreen() {
               combined.set(chunk, offset);
               offset += chunk.length;
             }
-            const base64 = btoa(String.fromCharCode(...combined));
-            setCameraImage(`data:image/jpeg;base64,${base64}`);
+            const base64 = uint8ArrayToBase64(combined);
+            const localFileUri = PERSISTED_CAMERA_IMAGE_PATH;
+
+            try {
+              await FileSystem.writeAsStringAsync(localFileUri, base64, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
+              console.log("Saved camera image to local file", localFileUri);
+              setSavedImagePath(localFileUri);
+              setCameraImage(`${localFileUri}?t=${Date.now()}`);
+            } catch (writeError) {
+              console.warn("Failed to save camera image locally", writeError);
+              setCameraImage(`data:image/jpeg;base64,${base64}`);
+            }
+
             chunksRef.current = [];
           } else if (msg.type === "transfer_end") {
+            console.log("transfer_end received");
             pc.close();
           }
-        } catch {}
+        } catch (error) {
+          console.warn("Failed to parse data channel message", error);
+        }
       } else {
         chunksRef.current.push(new Uint8Array(data));
       }
     };
 
+    let iceGatheringComplete: (() => void) | null = null;
+    const iceGatheringPromise = new Promise<void>((resolve) => {
+      iceGatheringComplete = resolve;
+    });
+
+    pc.onicecandidate = (event: any) => {
+      if (event?.candidate) {
+        console.log("icecandidate", event.candidate);
+      } else {
+        console.log("ice gathering complete");
+        iceGatheringComplete?.();
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log("ICE state", pc.iceConnectionState, pc.connectionState);
+      if (pc.iceConnectionState === "failed") {
+        console.warn("ICE connection failed for image transfer");
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      console.log("connection state", pc.connectionState);
+    };
+
     const offer = await pc.createOffer({});
-  await pc.setLocalDescription(offer);
+    await pc.setLocalDescription(offer);
 
-  await database().ref("signaling/smart_cctv/data_offer").set({
-    sdp: offer.sdp,
-    type: offer.type,
-  });
+    console.log("Waiting for ICE gathering to complete before sending data offer");
+    await iceGatheringPromise;
 
-  database()
-    .ref("signaling/smart_cctv/data_answer")
-    .on("value", async (snapshot: any) => {
+    await dataOfferRef.set({
+      sdp: pc.localDescription?.sdp || offer.sdp,
+      type: pc.localDescription?.type || offer.type,
+    });
+
+    let remoteConfigured = false;
+    const answerListener = dataAnswerRef.on("value", async (snapshot: any) => {
       const answer = snapshot.val();
-      if (answer && answer.sdp && !pc.currentRemoteDescription) {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      console.log("data_answer snapshot", answer);
+      if (answer && answer.sdp && !remoteConfigured) {
+        try {
+          await pc.setRemoteDescription(new RTCSessionDescription(answer));
+          console.log("remoteDescription set for image transfer");
+          remoteConfigured = true;
+          dataAnswerRef.off("value", answerListener);
+        } catch (error) {
+          console.warn("Failed to set remote description for image transfer", error);
+        }
       }
     });
   };
@@ -468,6 +557,8 @@ export default function AreaSettingScreen() {
                 source={
                   cameraImage
                     ? { uri: cameraImage }
+                    : savedImagePath
+                    ? { uri: savedImagePath }
                     : { uri: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1000&auto=format&fit=crop" }
                 }
                 className="w-full h-full"

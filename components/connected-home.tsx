@@ -154,7 +154,7 @@ export default function ConnectedHomeScreen() {
                   created_at: firestore.FieldValue.serverTimestamp(),
                 });
                 console.log("start_stream 명령 전송 완료");
-                router.push("/(tabs)/streaming");
+                router.navigate("/(tabs)/streaming");
               } catch (e) {
                 console.warn("start_stream 명령 전송 실패:", e);
               }

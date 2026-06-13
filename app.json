@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "RafourApp",
-    "slug": "RafourApp",
+    "name": "Rabiguard",
+    "slug": "rabiguard",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "rafourapp",
+    "scheme": "rabiguard",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "jsEngine": "hermes",
